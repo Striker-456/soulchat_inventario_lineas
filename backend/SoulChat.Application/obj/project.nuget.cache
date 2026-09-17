@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "c4Zr2wL+1Zk=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\USUARIO\\Desktop\\soulchat_inventario_lineas\\backend\\SoulChat.Application\\SoulChat.Application.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\USUARIO\\.nuget\\packages\\fluentvalidation\\11.11.0\\fluentvalidation.11.11.0.nupkg.sha512",
+    "C:\\Users\\USUARIO\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\11.11.0\\fluentvalidation.dependencyinjectionextensions.11.11.0.nupkg.sha512",
+    "C:\\Users\\USUARIO\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\9.0.4\\microsoft.extensions.dependencyinjection.abstractions.9.0.4.nupkg.sha512"
+  ],
+  "logs": []
+}

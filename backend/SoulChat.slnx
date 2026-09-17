@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SoulChat.Api/SoulChat.Api.csproj" />
+  <Project Path="SoulChat.Application/SoulChat.Application.csproj" />
+  <Project Path="SoulChat.Domain/SoulChat.Domain.csproj" />
+  <Project Path="SoulChat.Infrastructure/SoulChat.Infrastructure.csproj" />
+</Solution>

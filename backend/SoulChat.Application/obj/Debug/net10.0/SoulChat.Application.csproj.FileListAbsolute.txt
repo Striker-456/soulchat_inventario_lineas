@@ -1,0 +1,15 @@
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\bin\Debug\net10.0\SoulChat.Application.deps.json
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\bin\Debug\net10.0\SoulChat.Application.dll
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\bin\Debug\net10.0\SoulChat.Application.pdb
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\bin\Debug\net10.0\SoulChat.Domain.dll
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\bin\Debug\net10.0\SoulChat.Domain.pdb
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\SoulChat.Application.csproj.AssemblyReference.cache
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\SoulChat.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\SoulChat.Application.AssemblyInfoInputs.cache
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\SoulChat.Application.AssemblyInfo.cs
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\SoulChat.Application.csproj.CoreCompileInputs.cache
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\SoulChat.98780A6E.Up2Date
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\SoulChat.Application.dll
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\refint\SoulChat.Application.dll
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\SoulChat.Application.pdb
+C:\Users\USUARIO\Desktop\soulchat_inventario_lineas\backend\SoulChat.Application\obj\Debug\net10.0\ref\SoulChat.Application.dll
