@@ -96,6 +96,8 @@ if (app.Environment.IsDevelopment())
     db.Database.Migrate();
 }
 
+// ActividadMiddleware va por fuera de ExceptionMiddleware para ver el código de respuesta definitivo.
+app.UseMiddleware<ActividadMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseSwagger();

@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<LineaSmartConfig> LineaSmartConfig => Set<LineaSmartConfig>();
     public DbSet<UsuarioSistema> UsuariosSistema => Set<UsuarioSistema>();
     public DbSet<AuditoriaCambio> AuditoriaCambios => Set<AuditoriaCambio>();
+    public DbSet<LogSistema> LogsSistema => Set<LogSistema>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

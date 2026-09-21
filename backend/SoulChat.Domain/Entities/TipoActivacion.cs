@@ -1,6 +1,6 @@
 namespace SoulChat.Domain.Entities;
 
-public class TipoActivacion
+public class TipoActivacion : ICatalogEntity
 {
     public int Id { get; set; }
     public string Nombre { get; set; } = string.Empty;

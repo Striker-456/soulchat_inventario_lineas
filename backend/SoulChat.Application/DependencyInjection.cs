@@ -18,6 +18,11 @@ public static class DependencyInjection
         services.AddScoped<IAuditoriaService, AuditoriaService>();
         services.AddScoped<IEmpleadoService, EmpleadoService>();
         services.AddScoped<IUsuarioSistemaService, UsuarioSistemaService>();
+        services.AddScoped<IClienteService, ClienteService>();
+        services.AddScoped<ICatalogoAdminService, CatalogoAdminService>();
+        services.AddScoped<IPermisoService, PermisoService>();
+        services.AddScoped<IPerfilService, PerfilService>();
+        services.AddScoped<ILogService, LogService>();
 
         services.AddValidatorsFromAssemblyContaining<LoginRequestDtoValidator>();
 

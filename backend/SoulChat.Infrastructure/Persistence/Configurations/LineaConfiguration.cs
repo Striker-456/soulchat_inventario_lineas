@@ -11,6 +11,7 @@ public class LineaConfiguration : IEntityTypeConfiguration<Linea>
         builder.ToTable("lineas");
         builder.HasKey(l => l.Id);
         builder.Property(l => l.Id).HasColumnName("id");
+        builder.Property(l => l.Numero).HasColumnName("numero").HasMaxLength(20);
         builder.Property(l => l.ClienteId).HasColumnName("cliente_id").IsRequired();
         builder.Property(l => l.DescripcionUso).HasColumnName("descripcion_uso");
         builder.Property(l => l.StatusDesarrolloId).HasColumnName("status_desarrollo_id");
@@ -22,6 +23,9 @@ public class LineaConfiguration : IEntityTypeConfiguration<Linea>
 
         builder.HasIndex(l => l.ClienteId);
         builder.HasIndex(l => l.StatusDesarrolloId);
+
+        // Único; PostgreSQL permite varios NULL, así que las líneas previas sin número no chocan entre sí.
+        builder.HasIndex(l => l.Numero).IsUnique();
 
         builder.HasOne(l => l.Cliente)
             .WithMany(c => c.Lineas)

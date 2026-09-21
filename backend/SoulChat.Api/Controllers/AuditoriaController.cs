@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using SoulChat.Api.Filters;
+using SoulChat.Application.Common;
 using SoulChat.Application.Interfaces;
 
 namespace SoulChat.Api.Controllers;
@@ -15,6 +17,7 @@ public class AuditoriaController : ControllerBase
     }
 
     [HttpGet]
+    [RequierePermiso(Modulo.Auditoria, Accion.Ver)]
     public async Task<IActionResult> Get([FromQuery] string? tabla, [FromQuery] int? registroId) =>
         Ok(await _service.QueryAsync(tabla, registroId));
 }

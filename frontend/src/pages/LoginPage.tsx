@@ -1,0 +1,122 @@
+import { useState } from 'react';
+import logoUrl from '../assets/soulchat-logo.png';
+import fondoLoginUrl from '../assets/fondo-login.png';
+import { Button, ErrorBanner, Spinner } from '../components/ui';
+import { useAuth } from '../auth/AuthContext';
+import { errorMessage } from '../api';
+
+export default function LoginPage() {
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      await login(email, password);
+    } catch (err) {
+      setError(errorMessage(err));
+      setLoading(false);
+    }
+  };
+
+  return (
+    // El fondo de la ilustración es #FEFEFE: el panel izquierdo usa el mismo color para que no se note el borde.
+    <div className="min-h-screen flex bg-[#FEFEFE]">
+      {/* Ilustración de bienvenida, a la izquierda (se oculta en pantallas pequeñas) */}
+      <div className="hidden lg:flex lg:w-[55%] xl:w-3/5 items-center justify-center p-10">
+        <img
+          src={fondoLoginUrl}
+          alt="Bienvenidos a SOUL"
+          draggable={false}
+          className="w-full max-h-[85vh] object-contain select-none"
+        />
+      </div>
+
+      {/* Formulario */}
+      <div className="relative flex-1 min-w-0 overflow-hidden bg-gradient-to-br from-[#F8F9FA] via-white to-[#e8f7f9] flex items-center justify-center p-4 lg:border-l lg:border-[#E2E8F0]">
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-[#3FB6C4]/8 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-[#3A7BC8]/8 blur-3xl" />
+        </div>
+
+        <div className="relative w-full max-w-sm">
+          <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-xl shadow-black/5 p-8">
+            {/* Logo */}
+            <div className="flex flex-col items-center mb-8">
+              <img src={logoUrl} alt="SoulChat" className="h-14 w-auto mb-3" />
+              <h1 className="text-xl font-bold text-[#1A202C]">SoulChat</h1>
+              <p className="text-sm text-[#64748B] mt-0.5">Inventario Líneas</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && <ErrorBanner message={error} />}
+
+              <div className="flex flex-col gap-1">
+                <label htmlFor="email" className="text-xs font-medium text-[#374151]">Correo electrónico</label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="username"
+                  autoFocus
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="usuario@soulchat.mx"
+                  required
+                  className="w-full px-3 py-2.5 text-sm border border-[#E2E8F0] rounded-lg bg-white text-[#1A202C] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3FB6C4] focus:border-transparent transition"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label htmlFor="password" className="text-xs font-medium text-[#374151]">Contraseña</label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="w-full px-3 py-2.5 pr-10 text-sm border border-[#E2E8F0] rounded-lg bg-white text-[#1A202C] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3FB6C4] focus:border-transparent transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B]"
+                  >
+                    {showPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <Button type="submit" variant="primary" className="w-full py-2.5 mt-2" disabled={loading}>
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner />
+                    Ingresando...
+                  </span>
+                ) : 'Ingresar'}
+              </Button>
+            </form>
+          </div>
+
+          <p className="text-center text-xs text-[#94A3B8] mt-5">
+            © {new Date().getFullYear()} SoulChat · By Héctor  Velásquez. 
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

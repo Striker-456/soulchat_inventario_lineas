@@ -58,10 +58,14 @@ public class LineaRepository : GenericRepository<Linea>, ILineaRepository
         {
             var texto = $"%{filtro.Texto.Trim()}%";
             query = query.Where(l =>
+                EF.Functions.ILike(l.Numero ?? string.Empty, texto) ||
                 EF.Functions.ILike(l.DescripcionUso ?? string.Empty, texto) ||
                 EF.Functions.ILike(l.Cliente!.Nombre, texto));
         }
 
         return await query.OrderByDescending(l => l.UpdatedAt).ToListAsync();
     }
+
+    public async Task<bool> ExisteNumeroAsync(string numero, int? exceptoId) =>
+        await DbSet.AnyAsync(l => l.Numero == numero && (exceptoId == null || l.Id != exceptoId));
 }

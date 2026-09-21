@@ -1,7 +1,7 @@
 using FluentValidation;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SoulChat.Api.Common;
+using SoulChat.Api.Filters;
 using SoulChat.Application.Common;
 using SoulChat.Application.DTOs.Empleados;
 using SoulChat.Application.Interfaces;
@@ -12,8 +12,6 @@ namespace SoulChat.Api.Controllers;
 [Route("empleados")]
 public class EmpleadosController : ControllerBase
 {
-    private const string RolesEscritura = Roles.Admin + "," + Roles.Editor;
-
     private readonly IEmpleadoService _service;
     private readonly IValidator<EmpleadoCreateDto> _createValidator;
     private readonly IValidator<EmpleadoUpdateDto> _updateValidator;
@@ -29,13 +27,15 @@ public class EmpleadosController : ControllerBase
     }
 
     [HttpGet]
+    [RequierePermiso(Modulo.Empleados, Accion.Ver)]
     public async Task<ActionResult<IReadOnlyList<EmpleadoResponseDto>>> Get() => Ok(await _service.GetAllAsync());
 
     [HttpGet("{id:int}")]
+    [RequierePermiso(Modulo.Empleados, Accion.Ver)]
     public async Task<ActionResult<EmpleadoResponseDto>> GetById(int id) => Ok(await _service.GetByIdAsync(id));
 
     [HttpPost]
-    [Authorize(Roles = RolesEscritura)]
+    [RequierePermiso(Modulo.Empleados, Accion.Crear)]
     public async Task<ActionResult<EmpleadoResponseDto>> Create(EmpleadoCreateDto dto)
     {
         await _createValidator.ValidateAndThrowAppAsync(dto);
@@ -44,7 +44,7 @@ public class EmpleadosController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = RolesEscritura)]
+    [RequierePermiso(Modulo.Empleados, Accion.Editar)]
     public async Task<ActionResult<EmpleadoResponseDto>> Update(int id, EmpleadoUpdateDto dto)
     {
         await _updateValidator.ValidateAndThrowAppAsync(dto);
@@ -52,7 +52,7 @@ public class EmpleadosController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = RolesEscritura)]
+    [RequierePermiso(Modulo.Empleados, Accion.Eliminar)]
     public async Task<IActionResult> Delete(int id)
     {
         await _service.DeleteAsync(id);

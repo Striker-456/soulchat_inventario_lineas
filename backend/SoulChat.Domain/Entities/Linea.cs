@@ -4,6 +4,9 @@ namespace SoulChat.Domain.Entities;
 
 public class Linea : AuditableEntity
 {
+    /// <summary>Número telefónico de la línea (único). Nulo solo en registros anteriores a su introducción.</summary>
+    public string? Numero { get; set; }
+
     public int ClienteId { get; set; }
     public Cliente? Cliente { get; set; }
 

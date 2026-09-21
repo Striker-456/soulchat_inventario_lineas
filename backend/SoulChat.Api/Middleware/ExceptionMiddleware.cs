@@ -43,6 +43,11 @@ public class ExceptionMiddleware
         {
             _logger.LogError(exception, "Error no controlado procesando {Path}", context.Request.Path);
         }
+        else
+        {
+            // Para que el registro de actividad pueda explicar por qué falló la operación.
+            context.Items[ActividadMiddleware.MotivoKey] = title;
+        }
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;

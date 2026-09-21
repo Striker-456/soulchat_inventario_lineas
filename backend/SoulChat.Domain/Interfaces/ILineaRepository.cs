@@ -15,4 +15,7 @@ public interface ILineaRepository : IGenericRepository<Linea>
 {
     Task<Linea?> GetByIdWithConfigsAsync(int id);
     Task<IReadOnlyList<Linea>> BuscarAsync(LineaFiltro filtro);
+
+    /// <summary>¿Existe otra línea con ese número?</summary>
+    Task<bool> ExisteNumeroAsync(string numero, int? exceptoId);
 }

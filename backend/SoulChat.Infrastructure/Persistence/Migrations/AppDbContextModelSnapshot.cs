@@ -133,11 +133,24 @@ namespace SoulChat.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Activo")
+                        .HasColumnName("estado");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)")
                         .HasColumnName("nombre");
+
+                    b.Property<string>("Rfc")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
+                        .HasColumnName("rfc");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -206,6 +219,11 @@ namespace SoulChat.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("descripcion_uso");
 
+                    b.Property<string>("Numero")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("numero");
+
                     b.Property<int?>("ProgramadorId")
                         .HasColumnType("integer")
                         .HasColumnName("programador_id");
@@ -227,6 +245,9 @@ namespace SoulChat.Infrastructure.Persistence.Migrations
                     b.HasIndex("ClienteId");
 
                     b.HasIndex("CoordinadorId");
+
+                    b.HasIndex("Numero")
+                        .IsUnique();
 
                     b.HasIndex("ProgramadorId");
 
@@ -429,6 +450,70 @@ namespace SoulChat.Infrastructure.Persistence.Migrations
                     b.ToTable("linea_smart_config", (string)null);
                 });
 
+            modelBuilder.Entity("SoulChat.Domain.Entities.LogSistema", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("accion");
+
+                    b.Property<string>("Detalle")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("detalle");
+
+                    b.Property<DateTime>("Fecha")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Ip")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip");
+
+                    b.Property<string>("Modulo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("modulo");
+
+                    b.Property<string>("Nivel")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("nivel");
+
+                    b.Property<string>("UsuarioEmail")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("usuario_email");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Fecha");
+
+                    b.HasIndex("Modulo");
+
+                    b.HasIndex("Nivel");
+
+                    b.ToTable("logs_sistema", (string)null);
+                });
+
             modelBuilder.Entity("SoulChat.Domain.Entities.StatusDesarrollo", b =>
                 {
                     b.Property<int>("Id")
@@ -563,11 +648,20 @@ namespace SoulChat.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(150)")
                         .HasColumnName("email");
 
+                    b.Property<string>("Nombre")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nombre");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("password_hash");
+
+                    b.Property<string>("Permisos")
+                        .HasColumnType("text")
+                        .HasColumnName("permisos");
 
                     b.Property<string>("Rol")
                         .IsRequired()
@@ -588,6 +682,7 @@ namespace SoulChat.Infrastructure.Persistence.Migrations
                             Id = 1,
                             Activo = true,
                             Email = "admin@soulchat.local",
+                            Nombre = "Administrador",
                             PasswordHash = "$2a$11$zceyATz3nshERAyWCQdsheStsMEiMtGxh/RGhiacwUSjPGiMTeouG",
                             Rol = "Admin"
                         });

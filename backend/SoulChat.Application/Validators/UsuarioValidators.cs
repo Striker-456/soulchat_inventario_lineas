@@ -10,6 +10,7 @@ public class UsuarioCreateDtoValidator : AbstractValidator<UsuarioCreateDto>
 
     public UsuarioCreateDtoValidator()
     {
+        RuleFor(x => x.Nombre).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(150);
         RuleFor(x => x.Password).NotEmpty().MinimumLength(8);
         RuleFor(x => x.Rol).NotEmpty().Must(r => RolesValidos.Contains(r))
@@ -25,6 +26,9 @@ public class UsuarioUpdateDtoValidator : AbstractValidator<UsuarioUpdateDto>
     {
         RuleFor(x => x.Rol).NotEmpty().Must(r => RolesValidos.Contains(r))
             .WithMessage($"El rol debe ser uno de: {string.Join(", ", RolesValidos)}.");
+
+        // Opcional: si se envía, no puede quedar vacío.
+        RuleFor(x => x.Nombre).NotEmpty().MaximumLength(150).When(x => x.Nombre is not null);
     }
 }
 

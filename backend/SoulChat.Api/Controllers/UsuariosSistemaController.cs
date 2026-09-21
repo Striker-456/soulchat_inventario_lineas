@@ -17,18 +17,37 @@ public class UsuariosSistemaController : ControllerBase
     private readonly IValidator<UsuarioCreateDto> _createValidator;
     private readonly IValidator<UsuarioUpdateDto> _updateValidator;
     private readonly IValidator<CambiarPasswordDto> _passwordValidator;
+    private readonly IValidator<PermisosUpdateDto> _permisosValidator;
 
     public UsuariosSistemaController(
         IUsuarioSistemaService service,
         IValidator<UsuarioCreateDto> createValidator,
         IValidator<UsuarioUpdateDto> updateValidator,
-        IValidator<CambiarPasswordDto> passwordValidator)
+        IValidator<CambiarPasswordDto> passwordValidator,
+        IValidator<PermisosUpdateDto> permisosValidator)
     {
         _service = service;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
         _passwordValidator = passwordValidator;
+        _permisosValidator = permisosValidator;
     }
+
+    /// <summary>Módulos y acciones disponibles, y la plantilla de permisos de cada rol.</summary>
+    [HttpGet("permisos/catalogo")]
+    public ActionResult<PermisosCatalogoDto> GetCatalogoPermisos() => Ok(_service.GetCatalogoPermisos());
+
+    /// <summary>Reemplaza la matriz de permisos del usuario. No aplica a administradores (siempre tienen acceso total).</summary>
+    [HttpPut("{id:int}/permisos")]
+    public async Task<ActionResult<UsuarioResponseDto>> SetPermisos(int id, PermisosUpdateDto dto)
+    {
+        await _permisosValidator.ValidateAndThrowAppAsync(dto);
+        return Ok(await _service.SetPermisosAsync(id, dto));
+    }
+
+    /// <summary>Descarta los permisos personalizados: el usuario vuelve a la plantilla de su rol.</summary>
+    [HttpDelete("{id:int}/permisos")]
+    public async Task<ActionResult<UsuarioResponseDto>> ResetPermisos(int id) => Ok(await _service.ResetPermisosAsync(id));
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<UsuarioResponseDto>>> Get() => Ok(await _service.GetAllAsync());

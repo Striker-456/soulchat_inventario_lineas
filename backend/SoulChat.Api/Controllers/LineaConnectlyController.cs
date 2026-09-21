@@ -1,7 +1,7 @@
 using FluentValidation;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SoulChat.Api.Common;
+using SoulChat.Api.Filters;
 using SoulChat.Application.Common;
 using SoulChat.Application.DTOs.Connectly;
 using SoulChat.Application.Interfaces;
@@ -27,9 +27,11 @@ public class LineaConnectlyController : ControllerBase
     }
 
     [HttpGet]
+    [RequierePermiso(Modulo.Lineas, Accion.Ver)]
     public async Task<ActionResult<ConnectlyResponseDto>> Get(int lineaId) => Ok(await _service.GetByLineaIdAsync(lineaId));
 
     [HttpPost]
+    [RequierePermiso(Modulo.Lineas, Accion.Editar)]
     public async Task<ActionResult<ConnectlyResponseDto>> Create(int lineaId, ConnectlyCreateDto dto)
     {
         await _createValidator.ValidateAndThrowAppAsync(dto);
@@ -38,6 +40,7 @@ public class LineaConnectlyController : ControllerBase
     }
 
     [HttpPut]
+    [RequierePermiso(Modulo.Lineas, Accion.Editar)]
     public async Task<ActionResult<ConnectlyResponseDto>> Update(int lineaId, ConnectlyUpdateDto dto)
     {
         await _updateValidator.ValidateAndThrowAppAsync(dto);
@@ -45,6 +48,7 @@ public class LineaConnectlyController : ControllerBase
     }
 
     [HttpDelete]
+    [RequierePermiso(Modulo.Lineas, Accion.Editar)]
     public async Task<IActionResult> Delete(int lineaId)
     {
         await _service.DeleteAsync(lineaId);
@@ -52,7 +56,7 @@ public class LineaConnectlyController : ControllerBase
     }
 
     [HttpPost("revelar-credenciales")]
-    [Authorize(Roles = Roles.Admin)]
+    [RequierePermiso(Modulo.Credenciales, Accion.Ver)]
     public async Task<ActionResult<ConnectlyRevealResponseDto>> RevelarCredenciales(int lineaId) =>
         Ok(await _service.RevelarAsync(lineaId));
 }

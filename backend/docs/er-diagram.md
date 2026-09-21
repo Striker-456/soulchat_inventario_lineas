@@ -17,6 +17,8 @@ erDiagram
     CLIENTE {
         int id PK
         string nombre
+        string rfc "opcional, 12-13 caracteres"
+        string estado "Activo | Pausado"
     }
     EMPLEADO {
         int id PK
@@ -25,6 +27,7 @@ erDiagram
     }
     LINEA {
         int id PK
+        string numero "único; nulo solo en registros anteriores"
         int cliente_id FK
         string descripcion_uso
         int status_desarrollo_id FK
@@ -53,9 +56,23 @@ erDiagram
     }
     USUARIO_SISTEMA {
         int id PK
+        string nombre "nulo solo en cuentas antiguas"
         string email
         string password_hash
-        string rol
+        string rol "Admin | Editor | Consulta (plantilla de permisos)"
+        bool activo
+        text permisos "JSON modulo -> acciones; null = plantilla del rol"
+    }
+    LOG_SISTEMA {
+        bigint id PK
+        timestamptz fecha
+        string nivel "info | success | warning | error"
+        int usuario_id "sin FK: sobrevive al usuario"
+        string usuario_email
+        string modulo
+        string accion
+        string detalle
+        string ip
     }
     AUDITORIA_CAMBIO {
         int id PK
@@ -70,3 +87,10 @@ erDiagram
 
 El SQL de referencia (3FN) vive en la memoria del proyecto y se refleja 1:1 en la migración
 `SoulChat.Infrastructure/Persistence/Migrations/20260917224304_InitialCreate.cs`.
+
+La migración `AgregaNombreUsuarios` añade `usuarios_sistema.nombre` (nulo en cuentas existentes; la cuenta sembrada
+`admin@soulchat.local` recibe el nombre "Administrador").
+
+La migración `AgregaNumeroLineaClientesLogsYPermisos` añade `lineas.numero` (con índice único), `clientes.rfc` y
+`clientes.estado`, `usuarios_sistema.permisos` y la tabla `logs_sistema`. Es aditiva: las filas existentes se conservan
+(clientes quedan `Activo`; líneas sin `numero` hasta que se les asigne uno).

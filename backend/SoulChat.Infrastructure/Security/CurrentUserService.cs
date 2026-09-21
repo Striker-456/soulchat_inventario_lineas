@@ -21,4 +21,18 @@ public class CurrentUserService : ICurrentUserService
     public string? Email => User?.FindFirst(ClaimTypes.Email)?.Value;
 
     public string? Rol => User?.FindFirst(ClaimTypes.Role)?.Value;
+
+    public string? Ip
+    {
+        get
+        {
+            var ip = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress;
+            if (ip is null)
+            {
+                return null;
+            }
+
+            return (ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip).ToString();
+        }
+    }
 }
