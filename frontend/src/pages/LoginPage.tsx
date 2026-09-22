@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import logoUrl from '../assets/soulchat-logo.png';
-import fondoLoginUrl from '../assets/fondo-login.png';
+// Fondo_login.png sin la trama de puntos del fondo (pesa ~240 KB en vez de 1,6 MB). Si se cambia la imagen original,
+// hay que volver a limpiarla y regenerar este archivo.
+import fondoLoginUrl from '../assets/fondo-login-limpio.jpg';
 import { Button, ErrorBanner, Spinner } from '../components/ui';
 import { useAuth } from '../auth/AuthContext';
 import { errorMessage } from '../api';
+
+// Opacidad de la imagen de izquierda a derecha: completa hasta ~74% y luego baja de forma gradual hasta 0.
+const FADE_MASK =
+  'linear-gradient(to right, #000 0%, #000 74%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.65) 86%, rgba(0,0,0,0.35) 92%, rgba(0,0,0,0.12) 97%, transparent 100%)';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -26,26 +32,30 @@ export default function LoginPage() {
   };
 
   return (
-    // El fondo de la ilustración es #FEFEFE: el panel izquierdo usa el mismo color para que no se note el borde.
-    <div className="min-h-screen flex bg-[#FEFEFE]">
-      {/* Ilustración de bienvenida, a la izquierda (se oculta en pantallas pequeñas) */}
-      <div className="hidden lg:flex lg:w-[55%] xl:w-3/5 items-center justify-center p-10">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#F8F9FA] via-white to-[#e8f7f9]">
+      {/* Imagen de marca a la izquierda. La máscara la vuelve transparente hacia la derecha, así se funde con el
+          fondo del login (sin corte). Empieza a desvanecerse después del final de "Soulchat". Se oculta en pantallas pequeñas. */}
+      <div
+        className="hidden lg:block absolute inset-y-0 left-0 w-[72%]"
+        style={{ WebkitMaskImage: FADE_MASK, maskImage: FADE_MASK }}
+      >
         <img
           src={fondoLoginUrl}
-          alt="Bienvenidos a SOUL"
+          alt="Soulchat · Inventario de líneas WhatsApp"
           draggable={false}
-          className="w-full max-h-[85vh] object-contain select-none"
+          className="w-full h-full object-cover select-none"
+          style={{ objectPosition: '60% center' }}
         />
       </div>
 
-      {/* Formulario */}
-      <div className="relative flex-1 min-w-0 overflow-hidden bg-gradient-to-br from-[#F8F9FA] via-white to-[#e8f7f9] flex items-center justify-center p-4 lg:border-l lg:border-[#E2E8F0]">
-        {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-[#3FB6C4]/8 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-[#3A7BC8]/8 blur-3xl" />
-        </div>
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-[#3FB6C4]/8 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-[#3A7BC8]/8 blur-3xl" />
+      </div>
 
+      {/* Formulario */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 lg:w-[40%] lg:ml-auto">
         <div className="relative w-full max-w-sm">
           <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-xl shadow-black/5 p-8">
             {/* Logo */}
@@ -113,7 +123,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-xs text-[#94A3B8] mt-5">
-            © {new Date().getFullYear()} SoulChat · By Héctor  Velásquez. 
+            © {new Date().getFullYear()} SoulChat · By <a  href="https://www.linkedin.com/in/héctor-velásquez-b43581409/" target="_blank" rel="noopener noreferrer" className="text-[#3FB6C4] hover:underline">Héctor  Velásquez</a>
           </p>
         </div>
       </div>
