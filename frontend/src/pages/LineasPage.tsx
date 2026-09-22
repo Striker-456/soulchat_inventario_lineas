@@ -69,6 +69,25 @@ export default function LineasPage({ onViewDetalle }: { onViewDetalle: (id: numb
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const hasFilters = !!(filterCliente || filterStatus || filterCoord || search);
 
+  const handleExport = () => {
+    const csvField = (v: string | null | undefined) => {
+      const s = v ?? '';
+      return /[",;\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = ['numero', 'cliente', 'status', 'coordinador', 'programador', 'tenencia', 'descripcion'];
+    const filas = filtered.map(l => [
+      l.numero, l.clienteNombre, l.statusDesarrolloNombre, l.coordinadorNombre, l.programadorNombre, l.tenenciaSimCardNombre, l.descripcionUso,
+    ].map(csvField).join(','));
+    const csv = [header.join(','), ...filas].join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lineas_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleDelete = async () => {
     if (!toDelete) return;
     setDeleting(true);
@@ -101,6 +120,10 @@ export default function LineasPage({ onViewDetalle }: { onViewDetalle: (id: numb
               Importar masivo
             </Button>
           )}
+          <Button variant="outline" onClick={handleExport} disabled={filtered.length === 0}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            Exportar
+          </Button>
           {canCreate && (
             <Button variant="primary" onClick={() => setShowNewModal(true)}>
               <PlusIcon /> Nueva línea

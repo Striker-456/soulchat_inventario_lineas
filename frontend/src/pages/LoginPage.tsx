@@ -123,7 +123,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-xs text-[#94A3B8] mt-5">
-            © {new Date().getFullYear()} SoulChat · By Héctor  Velásquez. 
+            © {new Date().getFullYear()} SoulChat · By <a  href="https://www.linkedin.com/in/héctor-velásquez-b43581409/" target="_blank" rel="noopener noreferrer" className="text-[#3FB6C4] hover:underline">Héctor  Velásquez</a>
           </p>
         </div>
       </div>
