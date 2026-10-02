@@ -110,8 +110,9 @@ export interface Linea {
   id: number;
   /** Nulo solo en líneas registradas antes de que existiera el número. */
   numero: string | null;
-  clienteId: number;
-  clienteNombre: string;
+  /** Nulo en líneas importadas sin cliente. */
+  clienteId: number | null;
+  clienteNombre: string | null;
   descripcionUso: string | null;
   statusDesarrolloId: number | null;
   statusDesarrolloNombre: string | null;
@@ -128,7 +129,10 @@ export interface Linea {
 }
 
 // ─── Importación masiva ───────────────────────────────────────────────────────
-/** Una fila del CSV. Cliente, status, coordinador, programador y tenencia van por nombre. */
+/**
+ * Una fila del CSV. Solo `numero` es obligatorio. Los catálogos van por nombre y el servidor
+ * crea los que no existan. Los módulos se omiten si todas sus columnas vienen vacías.
+ */
 export interface ImportFila {
   numero: string;
   cliente: string;
@@ -137,6 +141,48 @@ export interface ImportFila {
   programador: string;
   tenencia: string;
   descripcionUso: string;
+  connectly?: ImportConnectly;
+  smart?: ImportSmart;
+}
+
+/** Columnas connectly_* del CSV. */
+export interface ImportConnectly {
+  usuario: string;
+  contrasena: string;
+  businessId: string;
+  apiKey: string;
+  webhook: string;
+  dns: string;
+}
+
+/** Columnas smart_* del CSV. */
+export interface ImportSmart {
+  tipoActivacion: string;
+  companyCampanasBotai: string;
+  bsp: string;
+  webhookCos: string;
+  webhookSda: string;
+  usuarioCompanyId: string;
+  clave: string;
+  companyBot: string;
+  botId: string;
+  botVersion: string;
+  appChannel: string;
+  companyIdCampanas: string;
+  /** Sí/No. */
+  envioPush: string;
+  uso: string;
+  observaciones: string;
+  /** AAAA-MM-DD o DD/MM/AAAA. */
+  fechaVerificacion: string;
+  /** Sí/No. */
+  facturado: string;
+}
+
+/** Registro que el servidor creó en un catálogo porque no existía. */
+export interface ImportCreado {
+  catalogo: string;
+  nombre: string;
 }
 
 export interface ImportError {
@@ -150,6 +196,7 @@ export interface ImportResult {
   total: number;
   creadas: number;
   errores: ImportError[];
+  catalogosCreados: ImportCreado[];
 }
 
 // ─── Connectly ────────────────────────────────────────────────────────────────
@@ -168,7 +215,8 @@ export interface Connectly {
   id: number;
   lineaId: number;
   numeroConnectly: string;
-  usuario: string;
+  /** Nulo si la configuración vino de una importación sin usuario. */
+  usuario: string | null;
   contrasenaMasked: string | null;
   businessId: string | null;
   apiKeyMasked: string | null;
@@ -179,7 +227,7 @@ export interface Connectly {
 }
 
 export interface ConnectlyReveal {
-  contrasena: string;
+  contrasena: string | null;
   apiKey: string | null;
 }
 

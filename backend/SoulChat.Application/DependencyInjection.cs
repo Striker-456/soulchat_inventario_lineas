@@ -12,6 +12,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ILineaService, LineaService>();
+        services.AddScoped<ILineaImportService, LineaImportService>();
         services.AddScoped<IConnectlyService, ConnectlyService>();
         services.AddScoped<ISmartService, SmartService>();
         services.AddScoped<ICatalogoService, CatalogoService>();

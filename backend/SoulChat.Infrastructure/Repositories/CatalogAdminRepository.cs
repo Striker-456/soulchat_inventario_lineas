@@ -16,6 +16,8 @@ public class CatalogAdminRepository<T> : ICatalogAdminRepository<T> where T : cl
 
     public async Task<T?> GetByIdAsync(int id) => await _context.Set<T>().FindAsync(id);
 
+    public async Task<IReadOnlyList<T>> GetAllAsync() => await _context.Set<T>().AsNoTracking().ToListAsync();
+
     public async Task AddAsync(T entity) => await _context.Set<T>().AddAsync(entity);
 
     public void Update(T entity) => _context.Set<T>().Update(entity);

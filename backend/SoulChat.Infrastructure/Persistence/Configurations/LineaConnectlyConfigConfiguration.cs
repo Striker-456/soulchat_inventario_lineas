@@ -13,8 +13,8 @@ public class LineaConnectlyConfigConfiguration : IEntityTypeConfiguration<LineaC
         builder.Property(c => c.Id).HasColumnName("id");
         builder.Property(c => c.LineaId).HasColumnName("linea_id").IsRequired();
         builder.Property(c => c.NumeroConnectly).HasColumnName("numero_connectly").HasMaxLength(20).IsRequired();
-        builder.Property(c => c.Usuario).HasColumnName("usuario").HasMaxLength(100).IsRequired();
-        builder.Property(c => c.ContrasenaCifrada).HasColumnName("contrasena_cifrada").IsRequired();
+        builder.Property(c => c.Usuario).HasColumnName("usuario").HasMaxLength(100);
+        builder.Property(c => c.ContrasenaCifrada).HasColumnName("contrasena_cifrada");
         builder.Property(c => c.BusinessId).HasColumnName("business_id").HasMaxLength(100);
         builder.Property(c => c.ApiKeyCifrada).HasColumnName("api_key_cifrada");
         builder.Property(c => c.Webhook).HasColumnName("webhook").HasMaxLength(255);

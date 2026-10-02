@@ -8,8 +8,9 @@ public class LineaConnectlyConfig : AuditableEntity
     public Linea? Linea { get; set; }
 
     public string NumeroConnectly { get; set; } = string.Empty;
-    public string Usuario { get; set; } = string.Empty;
-    public byte[] ContrasenaCifrada { get; set; } = Array.Empty<byte>();
+    /// <summary>Usuario y contraseña pueden faltar en configuraciones creadas por importación masiva.</summary>
+    public string? Usuario { get; set; }
+    public byte[]? ContrasenaCifrada { get; set; }
     public string? BusinessId { get; set; }
     public byte[]? ApiKeyCifrada { get; set; }
     public string? Webhook { get; set; }

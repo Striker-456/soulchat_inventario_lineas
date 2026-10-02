@@ -1,0 +1,71 @@
+name: soulchat-inventario-lineas
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-soulchat_inventario}
+      POSTGRES_USER: ${POSTGRES_USER:-soulchat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-soulchat} -d ${POSTGRES_DB:-soulchat_inventario}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [soulchat]
+
+  # Job de un solo uso: aplica las migraciones de EF Core y termina.
+  # La API (stage "runtime") no trae el SDK ni el código fuente, así que no
+  # puede correr "dotnet ef" por sí misma; por eso este paso vive aparte.
+  migrate:
+    build:
+      context: ./backend
+      target: migrate
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-soulchat_inventario};Username=${POSTGRES_USER:-soulchat};Password=${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [soulchat]
+
+  api:
+    build:
+      context: ./backend
+      target: runtime
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-soulchat_inventario};Username=${POSTGRES_USER:-soulchat};Password=${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}"
+      Jwt__Key: ${JWT_KEY:?Define JWT_KEY en .env (ver README de docker)}
+      Jwt__Issuer: SoulChatInventarioLineas
+      Jwt__Audience: SoulChatInventarioLineasClient
+      Encryption__Key: ${ENCRYPTION_KEY:?Define ENCRYPTION_KEY en .env (32 bytes en base64)}
+      # El frontend llega por el proxy de nginx (mismo origen, sin CORS).
+      # Estos orígenes son solo para pegarle a la API directo (Swagger, Postman).
+      Cors__AllowedOrigins__0: http://localhost:${FRONTEND_PORT:-8080}
+      Cors__AllowedOrigins__1: http://localhost:5173
+    ports:
+      - "${API_PORT:-5095}:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [soulchat]
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - api
+    networks: [soulchat]
+
+volumes:
+  db-data:
+
+networks:
+  soulchat:

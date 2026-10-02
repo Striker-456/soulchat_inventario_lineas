@@ -27,7 +27,7 @@ export default function LineasPage({ onViewDetalle }: { onViewDetalle: (id: numb
   const canImport = can('importar', 'crear');
 
   const toast = useToast();
-  const { clientes, status } = useCatalogos();
+  const { clientes, status, reload: reloadCatalogos } = useCatalogos();
   const { data: lineas, loading, error, reload } = useAsync(() => api.lineas.list());
 
   const [search, setSearch] = useState('');
@@ -180,7 +180,7 @@ export default function LineasPage({ onViewDetalle }: { onViewDetalle: (id: numb
                   ) : paginated.map(line => (
                     <tr key={line.id} className="hover:bg-[#FAFAFA] transition-colors group">
                       <td className="px-5 py-3"><LineaLabel linea={line} /></td>
-                      <td className="px-4 py-3 text-sm text-[#374151]">{line.clienteNombre}</td>
+                      <td className="px-4 py-3 text-sm text-[#374151]">{line.clienteNombre ?? <span className="text-[#94A3B8]">—</span>}</td>
                       <td className="px-4 py-3"><StatusBadge status={line.statusDesarrolloNombre} /></td>
                       <td className="px-4 py-3 text-sm text-[#374151]">{line.coordinadorNombre ?? <span className="text-[#94A3B8]">—</span>}</td>
                       <td className="px-4 py-3 text-sm text-[#374151]">{line.programadorNombre ?? <span className="text-[#94A3B8]">—</span>}</td>
@@ -221,9 +221,11 @@ export default function LineasPage({ onViewDetalle }: { onViewDetalle: (id: numb
         <ImportModal
           open={showImport}
           onClose={() => setShowImport(false)}
-          onDone={creadas => {
+          onDone={(creadas, catalogosCreados) => {
             toast.success(`${creadas} línea${creadas !== 1 ? 's' : ''} importada${creadas !== 1 ? 's' : ''} exitosamente`);
             void reload();
+            // La importación pudo dar de alta clientes, empleados u otros catálogos.
+            if (catalogosCreados > 0) void reloadCatalogos();
           }}
         />
       )}
@@ -233,7 +235,7 @@ export default function LineasPage({ onViewDetalle }: { onViewDetalle: (id: numb
         title="Eliminar línea"
         message={
           <>
-            ¿Eliminar la línea <strong>{toDelete ? lineaTexto(toDelete) : ''}</strong> de <strong>{toDelete?.clienteNombre}</strong>? Se eliminarán también sus configuraciones
+            ¿Eliminar la línea <strong>{toDelete ? lineaTexto(toDelete) : ''}</strong>{toDelete?.clienteNombre && <> de <strong>{toDelete.clienteNombre}</strong></>}? Se eliminarán también sus configuraciones
             {toDelete?.tieneConnectly || toDelete?.tieneSmart ? ' (' + [toDelete?.tieneConnectly && 'Connectly', toDelete?.tieneSmart && 'Smart'].filter(Boolean).join(' y ') + ')' : ''}. Esta acción no se puede deshacer.
           </>
         }

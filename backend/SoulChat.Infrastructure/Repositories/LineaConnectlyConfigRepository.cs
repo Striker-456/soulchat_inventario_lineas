@@ -11,4 +11,7 @@ public class LineaConnectlyConfigRepository : GenericRepository<LineaConnectlyCo
 
     public async Task<LineaConnectlyConfig?> GetByLineaIdAsync(int lineaId) =>
         await DbSet.FirstOrDefaultAsync(c => c.LineaId == lineaId);
+
+    public async Task<bool> ExisteNumeroAsync(string numero) =>
+        await DbSet.AnyAsync(c => c.NumeroConnectly == numero);
 }

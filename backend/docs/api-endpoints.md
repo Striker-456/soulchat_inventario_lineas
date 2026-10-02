@@ -59,7 +59,14 @@ Cada línea tiene un `numero` (único, máx. 20 caracteres, obligatorio al crear
 | POST | /lineas | lineas.crear | Crea una línea (409 si el número ya existe) |
 | PUT | /lineas/{id} | lineas.editar | Actualiza una línea |
 | DELETE | /lineas/{id} | lineas.eliminar | Elimina una línea (cascada sobre sus configs) |
-| POST | /lineas/importar | importar.crear | Alta masiva (hasta 500 filas). Cliente, status, coordinador, programador y tenencia se indican **por nombre** (sin acentos ni mayúsculas). Las filas válidas se crean; las inválidas se devuelven con su motivo: `{ total, creadas, errores: [{ fila, numero, mensajes }] }` |
+| POST | /lineas/importar | importar.crear | Alta masiva (hasta 500 filas). Ver [Importación masiva](#importación-masiva). Respuesta: `{ total, creadas, errores: [{ fila, numero, mensajes }], catalogosCreados: [{ catalogo, nombre }] }` |
+
+### Importación masiva
+- **Único campo obligatorio: `numero`.** La fila se rechaza si viene vacío, supera 20 caracteres, está repetido en el archivo o ya existe una línea con ese número. Formato E.164 recomendado (`+525512345678`).
+- **Catálogos por nombre, buscar o crear:** `cliente`, `coordinador`, `programador` (ambos en empleados), `status`, `tenencia` y, dentro de `smart`, `tipoActivacion`, `bsp`, `appChannel`. Se comparan sin acentos, mayúsculas ni espacios de más; si no existen se crean (clientes como *Activo*; empleados con rol *Coordinador* o *Programador* según la columna) y se auditan. Vacío → la línea queda sin esa relación. No exige permisos de alta sobre esos catálogos: basta `importar.crear`.
+- **Módulos:** `connectly: { usuario, contrasena, businessId, apiKey, webhook, dns }` y `smart: { tipoActivacion, companyCampanasBotai, bsp, webhookCos, webhookSda, usuarioCompanyId, clave, companyBot, botId, botVersion, appChannel, companyIdCampanas, envioPush, uso, observaciones, fechaVerificacion, facturado }`. Si todos los campos de un módulo vienen vacíos, no se crea su configuración; si alguno trae dato, se crea con el número de la línea como `numero_connectly` / `numero_linea` y los demás campos en NULL. Contraseña, API key y clave se cifran (AES).
+- Solo se rechaza una fila por datos mal formados: textos más largos que su columna, `envioPush`/`facturado` distintos de Sí/No, `fechaVerificacion` fuera de `AAAA-MM-DD` o `DD/MM/AAAA`, o número ya usado por otra config Connectly/Smart.
+- En el CSV del frontend las columnas de módulo llevan prefijo (`connectly_usuario`, `smart_bsp`, …) y las líneas que empiezan con `#` se ignoran.
 
 ## Connectly (por línea)
 | Método | Ruta | Permiso | Descripción |

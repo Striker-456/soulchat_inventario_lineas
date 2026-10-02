@@ -42,7 +42,9 @@ export default function DashboardPage() {
 
     const porCliente = new Map<number, { nombre: string; lineas: number }>();
     for (const l of all) {
-      const entry = porCliente.get(l.clienteId) ?? { nombre: l.clienteNombre, lineas: 0 };
+      // Las líneas importadas sin cliente no cuentan como cliente activo.
+      if (l.clienteId == null) continue;
+      const entry = porCliente.get(l.clienteId) ?? { nombre: l.clienteNombre ?? '', lineas: 0 };
       entry.lineas += 1;
       porCliente.set(l.clienteId, entry);
     }
@@ -151,7 +153,7 @@ export default function DashboardPage() {
                       {stats.recent.map(line => (
                         <tr key={line.id} className="hover:bg-[#FAFAFA] transition-colors">
                           <td className="px-5 py-3"><LineaLabel linea={line} /></td>
-                          <td className="px-4 py-3 text-sm text-[#374151]">{line.clienteNombre}</td>
+                          <td className="px-4 py-3 text-sm text-[#374151]">{line.clienteNombre ?? <span className="text-[#94A3B8]">—</span>}</td>
                           <td className="px-4 py-3"><StatusBadge status={line.statusDesarrolloNombre} /></td>
                           <td className="px-4 py-3"><ModulosBadges linea={line} /></td>
                           <td className="px-4 py-3 text-xs text-[#94A3B8]">{formatRelative(line.updatedAt)}</td>
