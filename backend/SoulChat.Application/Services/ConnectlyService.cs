@@ -148,7 +148,7 @@ public class ConnectlyService : IConnectlyService
         var config = await _configs.GetByLineaIdAsync(lineaId)
             ?? throw new NotFoundException($"La línea {lineaId} no tiene configuración de Connectly.");
 
-        var contrasena = _encryption.Decrypt(config.ContrasenaCifrada);
+        var contrasena = config.ContrasenaCifrada is not null ? _encryption.Decrypt(config.ContrasenaCifrada) : null;
         var apiKey = config.ApiKeyCifrada is not null ? _encryption.Decrypt(config.ApiKeyCifrada) : null;
 
         await _auditoria.RegistrarAsync(
@@ -169,7 +169,7 @@ public class ConnectlyService : IConnectlyService
 
     private ConnectlyResponseDto MapToDto(LineaConnectlyConfig c)
     {
-        var contrasenaPlain = _encryption.Decrypt(c.ContrasenaCifrada);
+        var contrasenaPlain = c.ContrasenaCifrada is not null ? _encryption.Decrypt(c.ContrasenaCifrada) : null;
         var apiKeyPlain = c.ApiKeyCifrada is not null ? _encryption.Decrypt(c.ApiKeyCifrada) : null;
 
         return new ConnectlyResponseDto(

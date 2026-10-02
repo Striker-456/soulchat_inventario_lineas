@@ -14,17 +14,20 @@ namespace SoulChat.Api.Controllers;
 public class LineasController : ControllerBase
 {
     private readonly ILineaService _service;
+    private readonly ILineaImportService _importService;
     private readonly IValidator<LineaCreateDto> _createValidator;
     private readonly IValidator<LineaUpdateDto> _updateValidator;
     private readonly IValidator<LineaImportRequestDto> _importValidator;
 
     public LineasController(
         ILineaService service,
+        ILineaImportService importService,
         IValidator<LineaCreateDto> createValidator,
         IValidator<LineaUpdateDto> updateValidator,
         IValidator<LineaImportRequestDto> importValidator)
     {
         _service = service;
+        _importService = importService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
         _importValidator = importValidator;
@@ -80,12 +83,15 @@ public class LineasController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Alta masiva. Las filas válidas se crean; las inválidas se devuelven con su motivo.</summary>
+    /// <summary>
+    /// Alta masiva. Solo el número es obligatorio; los catálogos que no existen se crean.
+    /// Las filas válidas se crean; las inválidas se devuelven con su motivo.
+    /// </summary>
     [HttpPost("importar")]
     [RequierePermiso(Modulo.Importar, Accion.Crear)]
     public async Task<ActionResult<LineaImportResultDto>> Importar(LineaImportRequestDto request)
     {
         await _importValidator.ValidateAndThrowAppAsync(request);
-        return Ok(await _service.ImportarAsync(request));
+        return Ok(await _importService.ImportarAsync(request));
     }
 }

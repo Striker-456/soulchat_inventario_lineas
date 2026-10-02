@@ -87,7 +87,7 @@ const emptyConnectlyForm = (): ConnectlyForm => ({
 
 const connectlyToForm = (c: Connectly): ConnectlyForm => ({
   numeroConnectly: c.numeroConnectly,
-  usuario: c.usuario,
+  usuario: c.usuario ?? '',
   businessId: c.businessId ?? '',
   webhook: c.webhook ?? '',
   dns: c.dns ?? '',
@@ -409,7 +409,7 @@ function LineaDetailForm({ lineaId, initial, options, onBack }: { lineaId: numbe
               <StatusBadge status={linea.statusDesarrolloNombre} />
             </div>
             <p className="text-sm text-[#64748B] mt-0.5">
-              {linea.clienteNombre}{smart.saved?.appChannelNombre ? ` · ${smart.saved.appChannelNombre}` : ''}
+              {linea.clienteNombre ?? 'Sin cliente'}{smart.saved?.appChannelNombre ? ` · ${smart.saved.appChannelNombre}` : ''}
             </p>
           </div>
           <div className="flex gap-2">
@@ -534,7 +534,7 @@ function LineaDetailForm({ lineaId, initial, options, onBack }: { lineaId: numbe
         title={confirm === 'linea' ? 'Eliminar línea' : `Eliminar configuración ${confirm === 'connectly' ? 'Connectly' : 'Smart'}`}
         message={
           confirm === 'linea'
-            ? <>¿Eliminar la línea <strong>{lineaTexto(linea)}</strong> de <strong>{linea.clienteNombre}</strong> junto con sus configuraciones? Esta acción no se puede deshacer.</>
+            ? <>¿Eliminar la línea <strong>{lineaTexto(linea)}</strong>{linea.clienteNombre && <> de <strong>{linea.clienteNombre}</strong></>} junto con sus configuraciones? Esta acción no se puede deshacer.</>
             : <>Se borrarán todos los datos y credenciales de esta configuración. Esta acción no se puede deshacer.</>
         }
         busy={confirmBusy}
@@ -565,7 +565,7 @@ function ConnectlyTab({ state, errors, canReveal, onChange, onReveal }: {
         <CredentialField
           label="Contraseña"
           masked={saved.contrasenaMasked}
-          revealed={revealed?.contrasena}
+          revealed={revealed?.contrasena ?? undefined}
           change={form.contrasena}
           onChange={c => set('contrasena', c)}
           canReveal={canReveal}

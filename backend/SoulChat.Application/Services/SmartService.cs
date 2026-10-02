@@ -188,7 +188,7 @@ public class SmartService : ISmartService
         }
     }
 
-    private static Dictionary<string, string?> ToFieldMap(LineaSmartConfig c) => new()
+    internal static Dictionary<string, string?> ToFieldMap(LineaSmartConfig c) => new()
     {
         ["numero_linea"] = c.NumeroLinea,
         ["tipo_activacion_id"] = c.TipoActivacionId?.ToString(),

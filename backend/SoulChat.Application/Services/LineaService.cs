@@ -8,9 +8,6 @@ namespace SoulChat.Application.Services;
 
 public class LineaService : ILineaService
 {
-    private const int MaxNumero = 20;
-    private const int MaxDescripcion = 4000;
-
     private readonly ILineaRepository _lineas;
     private readonly ICatalogRepository<Cliente> _clientes;
     private readonly ICatalogRepository<Empleado> _empleados;
@@ -18,7 +15,6 @@ public class LineaService : ILineaService
     private readonly ICatalogRepository<TenenciaSimCard> _tenencias;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditoriaService _auditoria;
-    private readonly ILogService _log;
 
     public LineaService(
         ILineaRepository lineas,
@@ -27,8 +23,7 @@ public class LineaService : ILineaService
         ICatalogRepository<StatusDesarrollo> status,
         ICatalogRepository<TenenciaSimCard> tenencias,
         IUnitOfWork unitOfWork,
-        IAuditoriaService auditoria,
-        ILogService log)
+        IAuditoriaService auditoria)
     {
         _lineas = lineas;
         _clientes = clientes;
@@ -37,7 +32,6 @@ public class LineaService : ILineaService
         _tenencias = tenencias;
         _unitOfWork = unitOfWork;
         _auditoria = auditoria;
-        _log = log;
     }
 
     public async Task<IReadOnlyList<LineaResponseDto>> BuscarAsync(LineaFiltro filtro)
@@ -121,84 +115,6 @@ public class LineaService : ILineaService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<LineaImportResultDto> ImportarAsync(LineaImportRequestDto request)
-    {
-        var clientes = IndexarPorNombre(await _clientes.GetAllAsync(), c => c.Id, c => c.Nombre);
-        var empleados = IndexarPorNombre(await _empleados.GetAllAsync(), e => e.Id, e => e.Nombre);
-        var status = IndexarPorNombre(await _status.GetAllAsync(), s => s.Id, s => s.Nombre);
-        var tenencias = IndexarPorNombre(await _tenencias.GetAllAsync(), t => t.Id, t => t.Nombre);
-
-        var numerosEnArchivo = new HashSet<string>(StringComparer.Ordinal);
-        var errores = new List<LineaImportErrorDto>();
-        var creadas = 0;
-
-        for (var i = 0; i < request.Filas.Count; i++)
-        {
-            var fila = request.Filas[i];
-            var mensajes = new List<string>();
-            var numero = fila.Numero?.Trim();
-
-            if (string.IsNullOrEmpty(numero))
-            {
-                mensajes.Add("El número es requerido.");
-            }
-            else if (numero.Length > MaxNumero)
-            {
-                mensajes.Add($"El número no puede superar {MaxNumero} caracteres.");
-            }
-            else if (!numerosEnArchivo.Add(numero))
-            {
-                mensajes.Add("El número está repetido en el archivo.");
-            }
-            else if (await _lineas.ExisteNumeroAsync(numero, null))
-            {
-                mensajes.Add("Ya existe una línea con ese número.");
-            }
-
-            var clienteId = ResolverRequerido(fila.Cliente, "cliente", clientes, mensajes);
-            var statusId = ResolverOpcional(fila.Status, "status", status, mensajes);
-            var coordinadorId = ResolverOpcional(fila.Coordinador, "coordinador", empleados, mensajes);
-            var programadorId = ResolverOpcional(fila.Programador, "programador", empleados, mensajes);
-            var tenenciaId = ResolverOpcional(fila.Tenencia, "tenencia", tenencias, mensajes);
-
-            if (fila.DescripcionUso is { Length: > MaxDescripcion })
-            {
-                mensajes.Add($"La descripción no puede superar {MaxDescripcion} caracteres.");
-            }
-
-            if (mensajes.Count > 0)
-            {
-                errores.Add(new LineaImportErrorDto(i + 1, fila.Numero, mensajes));
-                continue;
-            }
-
-            var linea = new Linea
-            {
-                Numero = numero,
-                ClienteId = clienteId!.Value,
-                DescripcionUso = string.IsNullOrWhiteSpace(fila.DescripcionUso) ? null : fila.DescripcionUso.Trim(),
-                StatusDesarrolloId = statusId,
-                CoordinadorId = coordinadorId,
-                ProgramadorId = programadorId,
-                TenenciaSimCardId = tenenciaId,
-            };
-
-            await _lineas.AddAsync(linea);
-            await _unitOfWork.SaveChangesAsync();
-            await RegistrarAltaAsync(linea);
-            creadas++;
-        }
-
-        var nivel = errores.Count == 0 ? NivelLog.Success : NivelLog.Warning;
-        await _log.RegistrarAsync(
-            nivel,
-            "Líneas",
-            "IMPORT",
-            $"Importación masiva: {creadas} línea(s) agregada(s), {errores.Count} con errores de {request.Filas.Count}.");
-
-        return new LineaImportResultDto(request.Filas.Count, creadas, errores);
-    }
-
     private async Task RegistrarAltaAsync(Linea linea)
     {
         var cambios = ToFieldMap(linea)
@@ -244,49 +160,10 @@ public class LineaService : ILineaService
         }
     }
 
-    /// <summary>Nombre normalizado (sin acentos, minúsculas) → id. Si hay nombres repetidos gana el primero.</summary>
-    private static Dictionary<string, int> IndexarPorNombre<T>(IEnumerable<T> items, Func<T, int> id, Func<T, string> nombre)
-    {
-        var index = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var item in items)
-        {
-            index.TryAdd(Texto.Normalizar(nombre(item)), id(item));
-        }
-
-        return index;
-    }
-
-    private static int? ResolverRequerido(string? nombre, string etiqueta, Dictionary<string, int> index, List<string> errores)
-    {
-        if (string.IsNullOrWhiteSpace(nombre))
-        {
-            errores.Add($"El {etiqueta} es requerido.");
-            return null;
-        }
-
-        return ResolverOpcional(nombre, etiqueta, index, errores);
-    }
-
-    private static int? ResolverOpcional(string? nombre, string etiqueta, Dictionary<string, int> index, List<string> errores)
-    {
-        if (string.IsNullOrWhiteSpace(nombre))
-        {
-            return null;
-        }
-
-        if (index.TryGetValue(Texto.Normalizar(nombre), out var id))
-        {
-            return id;
-        }
-
-        errores.Add($"No existe el {etiqueta} '{nombre.Trim()}'.");
-        return null;
-    }
-
-    private static Dictionary<string, string?> ToFieldMap(Linea l) => new()
+    internal static Dictionary<string, string?> ToFieldMap(Linea l) => new()
     {
         ["numero"] = l.Numero,
-        ["cliente_id"] = l.ClienteId.ToString(),
+        ["cliente_id"] = l.ClienteId?.ToString(),
         ["descripcion_uso"] = l.DescripcionUso,
         ["status_desarrollo_id"] = l.StatusDesarrolloId?.ToString(),
         ["coordinador_id"] = l.CoordinadorId?.ToString(),
@@ -298,7 +175,7 @@ public class LineaService : ILineaService
         l.Id,
         l.Numero,
         l.ClienteId,
-        l.Cliente?.Nombre ?? string.Empty,
+        l.Cliente?.Nombre,
         l.DescripcionUso,
         l.StatusDesarrolloId,
         l.StatusDesarrollo?.Nombre,

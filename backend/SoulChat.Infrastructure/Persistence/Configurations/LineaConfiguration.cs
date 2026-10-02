@@ -12,7 +12,7 @@ public class LineaConfiguration : IEntityTypeConfiguration<Linea>
         builder.HasKey(l => l.Id);
         builder.Property(l => l.Id).HasColumnName("id");
         builder.Property(l => l.Numero).HasColumnName("numero").HasMaxLength(20);
-        builder.Property(l => l.ClienteId).HasColumnName("cliente_id").IsRequired();
+        builder.Property(l => l.ClienteId).HasColumnName("cliente_id");
         builder.Property(l => l.DescripcionUso).HasColumnName("descripcion_uso");
         builder.Property(l => l.StatusDesarrolloId).HasColumnName("status_desarrollo_id");
         builder.Property(l => l.CoordinadorId).HasColumnName("coordinador_id");

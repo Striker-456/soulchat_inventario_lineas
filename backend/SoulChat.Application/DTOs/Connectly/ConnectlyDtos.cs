@@ -22,7 +22,7 @@ public record ConnectlyResponseDto(
     int Id,
     int LineaId,
     string NumeroConnectly,
-    string Usuario,
+    string? Usuario,
     string? ContrasenaMasked,
     string? BusinessId,
     string? ApiKeyMasked,
@@ -31,4 +31,4 @@ public record ConnectlyResponseDto(
     DateTime CreatedAt,
     DateTime UpdatedAt);
 
-public record ConnectlyRevealResponseDto(string Contrasena, string? ApiKey);
+public record ConnectlyRevealResponseDto(string? Contrasena, string? ApiKey);

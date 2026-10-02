@@ -11,3 +11,6 @@ backend/SoulChat.Api/appsettings.Production.json
 ## IDE
 .vs/
 .vscode/
+
+## Docker (secretos por dispositivo; ver .env.example)
+.env

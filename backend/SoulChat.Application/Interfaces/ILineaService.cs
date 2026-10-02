@@ -10,7 +10,4 @@ public interface ILineaService
     Task<LineaResponseDto> CreateAsync(LineaCreateDto dto);
     Task<LineaResponseDto> UpdateAsync(int id, LineaUpdateDto dto);
     Task DeleteAsync(int id);
-
-    /// <summary>Crea las líneas válidas y reporta, fila por fila, las que no se pudieron importar.</summary>
-    Task<LineaImportResultDto> ImportarAsync(LineaImportRequestDto request);
 }

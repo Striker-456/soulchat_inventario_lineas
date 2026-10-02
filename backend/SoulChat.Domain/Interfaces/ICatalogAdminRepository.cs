@@ -6,6 +6,7 @@ namespace SoulChat.Domain.Interfaces;
 public interface ICatalogAdminRepository<T> where T : class, ICatalogEntity
 {
     Task<T?> GetByIdAsync(int id);
+    Task<IReadOnlyList<T>> GetAllAsync();
     Task AddAsync(T entity);
     void Update(T entity);
     void Remove(T entity);

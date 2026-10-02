@@ -1,0 +1,16 @@
+bin/
+obj/
+**/bin/
+**/obj/
+*.user
+
+# Secretos locales: nunca deben entrar a la imagen. En Docker, la config
+# (connection string, Jwt:Key, Encryption:Key) se inyecta por variables de
+# entorno vía docker-compose, no por estos archivos.
+SoulChat.Api/appsettings.Development.json
+SoulChat.Api/appsettings.Local.json
+SoulChat.Api/appsettings.Production.json
+
+.vs/
+.vscode/
+docs/
