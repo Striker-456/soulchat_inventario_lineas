@@ -56,15 +56,17 @@ builder.Services.AddCors(options =>
     });
 });
 
-// En producción la API corre detrás del proxy de Render: la IP real del cliente llega en
-// X-Forwarded-For. ForwardLimit = 1 toma solo el valor que agrega el proxy, así el cliente
-// no puede falsificarla. La IP del proxy no es fija, por eso no se restringe por red.
+// En producción la API corre detrás de varios proxies internos de Render (IPs privadas) y la
+// IP real del cliente llega en X-Forwarded-For. Se confía solo en proxies de redes privadas:
+// la cadena se recorre de derecha a izquierda saltando esos proxies y se toma la primera IP
+// pública. Lo que el cliente ponga en el encabezado queda a la izquierda y nunca se usa.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.ForwardLimit = 1;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
+    options.ForwardLimit = null;
+    options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("10.0.0.0/8"));
+    options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("172.16.0.0/12"));
+    options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("192.168.0.0/16"));
 });
 
 builder.Services.AddEndpointsApiExplorer();
