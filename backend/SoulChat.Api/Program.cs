@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -55,6 +56,17 @@ builder.Services.AddCors(options =>
     });
 });
 
+// En producción la API corre detrás del proxy de Render: la IP real del cliente llega en
+// X-Forwarded-For. ForwardLimit = 1 toma solo el valor que agrega el proxy, así el cliente
+// no puede falsificarla. La IP del proxy no es fija, por eso no se restringe por red.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -95,6 +107,9 @@ if (app.Environment.IsDevelopment())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }
+
+// Primero, para que los logs y la redirección HTTPS vean la IP y el esquema reales del cliente.
+app.UseForwardedHeaders();
 
 // ActividadMiddleware va por fuera de ExceptionMiddleware para ver el código de respuesta definitivo.
 app.UseMiddleware<ActividadMiddleware>();
