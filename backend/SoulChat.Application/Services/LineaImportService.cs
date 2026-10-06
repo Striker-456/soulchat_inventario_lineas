@@ -32,9 +32,7 @@ public class LineaImportService : ILineaImportService
     private readonly IEmpleadoRepository _empleados;
     private readonly ICatalogAdminRepository<StatusDesarrollo> _status;
     private readonly ICatalogAdminRepository<TenenciaSimCard> _tenencias;
-    private readonly ICatalogAdminRepository<TipoActivacion> _tiposActivacion;
     private readonly ICatalogAdminRepository<Bsp> _bsps;
-    private readonly ICatalogAdminRepository<AppChannel> _appChannels;
     private readonly ICredentialEncryptionService _encryption;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditoriaService _auditoria;
@@ -48,9 +46,7 @@ public class LineaImportService : ILineaImportService
         IEmpleadoRepository empleados,
         ICatalogAdminRepository<StatusDesarrollo> status,
         ICatalogAdminRepository<TenenciaSimCard> tenencias,
-        ICatalogAdminRepository<TipoActivacion> tiposActivacion,
         ICatalogAdminRepository<Bsp> bsps,
-        ICatalogAdminRepository<AppChannel> appChannels,
         ICredentialEncryptionService encryption,
         IUnitOfWork unitOfWork,
         IAuditoriaService auditoria,
@@ -63,9 +59,7 @@ public class LineaImportService : ILineaImportService
         _empleados = empleados;
         _status = status;
         _tenencias = tenencias;
-        _tiposActivacion = tiposActivacion;
         _bsps = bsps;
-        _appChannels = appChannels;
         _encryption = encryption;
         _unitOfWork = unitOfWork;
         _auditoria = auditoria;
@@ -188,10 +182,12 @@ public class LineaImportService : ILineaImportService
 
         if (smart is not null)
         {
-            ValidarLongitud(smart.TipoActivacion, MaxNombreCatalogo, "El tipo de activación", m);
+            ValidarLongitud(smart.Estado, 100, "El estado de Smart", m);
+            ValidarLongitud(smart.TipoActivacion, 150, "El tipo de activación", m);
             ValidarLongitud(smart.Bsp, MaxNombreCatalogo, "El BSP", m);
-            ValidarLongitud(smart.AppChannel, MaxNombreCatalogo, "El app channel", m);
+            ValidarLongitud(smart.AppChannel, 100, "El app channel", m);
             ValidarLongitud(smart.CompanyCampanasBotai, 150, "El company de campañas Botai", m);
+            ValidarLongitud(smart.WebhookCampanas, 255, "El webhook de campañas", m);
             ValidarLongitud(smart.WebhookCos, 255, "El webhook COS", m);
             ValidarLongitud(smart.WebhookSda, 255, "El webhook SDA", m);
             ValidarLongitud(smart.UsuarioCompanyId, 100, "El usuario / company ID", m);
@@ -230,7 +226,7 @@ public class LineaImportService : ILineaImportService
 
     private static bool TieneDatos(LineaImportSmartDto? s) =>
         s is not null && AlgunoConDatos(
-            s.TipoActivacion, s.CompanyCampanasBotai, s.Bsp, s.WebhookCos, s.WebhookSda, s.UsuarioCompanyId,
+            s.Estado, s.TipoActivacion, s.CompanyCampanasBotai, s.Bsp, s.WebhookCampanas, s.WebhookCos, s.WebhookSda, s.UsuarioCompanyId,
             s.Clave, s.CompanyBot, s.BotId, s.BotVersion, s.AppChannel, s.CompanyIdCampanas, s.EnvioPush,
             s.Uso, s.Observaciones, s.FechaVerificacion, s.Facturado);
 
@@ -259,9 +255,11 @@ public class LineaImportService : ILineaImportService
         return new LineaSmartConfig
         {
             NumeroLinea = numero,
-            TipoActivacionId = await BuscarOCrearAsync(catalogos.TiposActivacion, s.TipoActivacion, creados),
+            Estado = NombreLimpio(s.Estado),
+            TipoActivacion = NombreLimpio(s.TipoActivacion),
             CompanyCampanasBotai = Limpio(s.CompanyCampanasBotai),
             BspId = await BuscarOCrearAsync(catalogos.Bsps, s.Bsp, creados),
+            WebhookCampanas = Limpio(s.WebhookCampanas),
             WebhookCos = Limpio(s.WebhookCos),
             WebhookSda = Limpio(s.WebhookSda),
             UsuarioCompanyId = Limpio(s.UsuarioCompanyId),
@@ -269,7 +267,7 @@ public class LineaImportService : ILineaImportService
             CompanyBot = Limpio(s.CompanyBot),
             BotId = Limpio(s.BotId),
             BotVersion = Limpio(s.BotVersion),
-            AppChannelId = await BuscarOCrearAsync(catalogos.AppChannels, s.AppChannel, creados),
+            AppChannel = Limpio(s.AppChannel),
             CompanyIdCampanas = Limpio(s.CompanyIdCampanas),
             EnvioPush = envioPush,
             Uso = Limpio(s.Uso),
@@ -299,9 +297,7 @@ public class LineaImportService : ILineaImportService
         Catalogo<Empleado> Programadores,
         Catalogo<StatusDesarrollo> Status,
         Catalogo<TenenciaSimCard> Tenencias,
-        Catalogo<TipoActivacion> TiposActivacion,
-        Catalogo<Bsp> Bsps,
-        Catalogo<AppChannel> AppChannels);
+        Catalogo<Bsp> Bsps);
 
     private async Task<Catalogos> CargarCatalogosAsync()
     {
@@ -331,9 +327,7 @@ public class LineaImportService : ILineaImportService
             Empleados("Programador"),
             await CatalogoSimpleAsync(_status, "Status", "status_desarrollo"),
             await CatalogoSimpleAsync(_tenencias, "Tenencia", "tenencia_sim_card"),
-            await CatalogoSimpleAsync(_tiposActivacion, "Tipo de activación", "tipo_activacion"),
-            await CatalogoSimpleAsync(_bsps, "BSP", "bsp"),
-            await CatalogoSimpleAsync(_appChannels, "App channel", "app_channel"));
+            await CatalogoSimpleAsync(_bsps, "BSP", "bsp"));
     }
 
     private static async Task<Catalogo<T>> CatalogoSimpleAsync<T>(ICatalogAdminRepository<T> repo, string etiqueta, string tabla)

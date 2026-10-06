@@ -40,7 +40,7 @@ public record LineaResponseDto(
 // ─── Importación masiva ───────────────────────────────────────────────────────
 /// <summary>
 /// Una fila del archivo. Solo <c>Numero</c> es obligatorio. Los catálogos (cliente, status, empleados,
-/// tenencia, tipo de activación, BSP, app channel) se indican por nombre y se crean si no existen.
+/// tenencia, BSP) se indican por nombre y se crean si no existen.
 /// </summary>
 public record LineaImportFilaDto(
     string? Numero,
@@ -53,7 +53,7 @@ public record LineaImportFilaDto(
     LineaImportConnectlyDto? Connectly = null,
     LineaImportSmartDto? Smart = null);
 
-/// <summary>Columnas connectly_*. Si todas vienen vacías no se crea la configuración.</summary>
+/// <summary>Columnas del módulo Connectly. Si todas vienen vacías no se crea la configuración.</summary>
 public record LineaImportConnectlyDto(
     string? Usuario,
     string? Contrasena,
@@ -62,14 +62,16 @@ public record LineaImportConnectlyDto(
     string? Webhook,
     string? Dns);
 
-/// <summary>Columnas smart_*. Si todas vienen vacías no se crea la configuración.</summary>
+/// <summary>Columnas del módulo Smart. Si todas vienen vacías no se crea la configuración.</summary>
 /// <param name="EnvioPush">Sí/No (también true/false, 1/0).</param>
 /// <param name="FechaVerificacion">AAAA-MM-DD o DD/MM/AAAA.</param>
 /// <param name="Facturado">Sí/No (también true/false, 1/0).</param>
 public record LineaImportSmartDto(
+    string? Estado,
     string? TipoActivacion,
     string? CompanyCampanasBotai,
     string? Bsp,
+    string? WebhookCampanas,
     string? WebhookCos,
     string? WebhookSda,
     string? UsuarioCompanyId,

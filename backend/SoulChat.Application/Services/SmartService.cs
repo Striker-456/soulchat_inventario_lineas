@@ -10,9 +10,7 @@ public class SmartService : ISmartService
 {
     private readonly ILineaSmartConfigRepository _configs;
     private readonly ILineaRepository _lineas;
-    private readonly ICatalogRepository<TipoActivacion> _tiposActivacion;
     private readonly ICatalogRepository<Bsp> _bsps;
-    private readonly ICatalogRepository<AppChannel> _appChannels;
     private readonly ICredentialEncryptionService _encryption;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditoriaService _auditoria;
@@ -20,18 +18,14 @@ public class SmartService : ISmartService
     public SmartService(
         ILineaSmartConfigRepository configs,
         ILineaRepository lineas,
-        ICatalogRepository<TipoActivacion> tiposActivacion,
         ICatalogRepository<Bsp> bsps,
-        ICatalogRepository<AppChannel> appChannels,
         ICredentialEncryptionService encryption,
         IUnitOfWork unitOfWork,
         IAuditoriaService auditoria)
     {
         _configs = configs;
         _lineas = lineas;
-        _tiposActivacion = tiposActivacion;
         _bsps = bsps;
-        _appChannels = appChannels;
         _encryption = encryption;
         _unitOfWork = unitOfWork;
         _auditoria = auditoria;
@@ -57,15 +51,17 @@ public class SmartService : ISmartService
             throw new ConflictException($"La línea {lineaId} ya tiene configuración de Smart.");
         }
 
-        await ValidarReferenciasAsync(dto.TipoActivacionId, dto.BspId, dto.AppChannelId);
+        await ValidarBspAsync(dto.BspId);
 
         var config = new LineaSmartConfig
         {
             LineaId = lineaId,
             NumeroLinea = dto.NumeroLinea,
-            TipoActivacionId = dto.TipoActivacionId,
+            Estado = dto.Estado,
+            TipoActivacion = dto.TipoActivacion,
             CompanyCampanasBotai = dto.CompanyCampanasBotai,
             BspId = dto.BspId,
+            WebhookCampanas = dto.WebhookCampanas,
             WebhookCos = dto.WebhookCos,
             WebhookSda = dto.WebhookSda,
             UsuarioCompanyId = dto.UsuarioCompanyId,
@@ -73,7 +69,7 @@ public class SmartService : ISmartService
             CompanyBot = dto.CompanyBot,
             BotId = dto.BotId,
             BotVersion = dto.BotVersion,
-            AppChannelId = dto.AppChannelId,
+            AppChannel = dto.AppChannel,
             CompanyIdCampanas = dto.CompanyIdCampanas,
             EnvioPush = dto.EnvioPush,
             Uso = dto.Uso,
@@ -103,21 +99,23 @@ public class SmartService : ISmartService
         var config = await _configs.GetByLineaIdAsync(lineaId)
             ?? throw new NotFoundException($"La línea {lineaId} no tiene configuración de Smart.");
 
-        await ValidarReferenciasAsync(dto.TipoActivacionId, dto.BspId, dto.AppChannelId);
+        await ValidarBspAsync(dto.BspId);
 
         var antes = ToFieldMap(config);
 
         config.NumeroLinea = dto.NumeroLinea;
-        config.TipoActivacionId = dto.TipoActivacionId;
+        config.Estado = dto.Estado;
+        config.TipoActivacion = dto.TipoActivacion;
         config.CompanyCampanasBotai = dto.CompanyCampanasBotai;
         config.BspId = dto.BspId;
+        config.WebhookCampanas = dto.WebhookCampanas;
         config.WebhookCos = dto.WebhookCos;
         config.WebhookSda = dto.WebhookSda;
         config.UsuarioCompanyId = dto.UsuarioCompanyId;
         config.CompanyBot = dto.CompanyBot;
         config.BotId = dto.BotId;
         config.BotVersion = dto.BotVersion;
-        config.AppChannelId = dto.AppChannelId;
+        config.AppChannel = dto.AppChannel;
         config.CompanyIdCampanas = dto.CompanyIdCampanas;
         config.EnvioPush = dto.EnvioPush;
         config.Uso = dto.Uso;
@@ -170,37 +168,29 @@ public class SmartService : ISmartService
         return new SmartRevealResponseDto(clave);
     }
 
-    private async Task ValidarReferenciasAsync(int? tipoActivacionId, int? bspId, int? appChannelId)
+    private async Task ValidarBspAsync(int? bspId)
     {
-        if (tipoActivacionId is not null && await _tiposActivacion.GetByIdAsync(tipoActivacionId.Value) is null)
-        {
-            throw new NotFoundException($"No se encontró el tipo de activación con id {tipoActivacionId}.");
-        }
-
         if (bspId is not null && await _bsps.GetByIdAsync(bspId.Value) is null)
         {
             throw new NotFoundException($"No se encontró el BSP con id {bspId}.");
-        }
-
-        if (appChannelId is not null && await _appChannels.GetByIdAsync(appChannelId.Value) is null)
-        {
-            throw new NotFoundException($"No se encontró el app channel con id {appChannelId}.");
         }
     }
 
     internal static Dictionary<string, string?> ToFieldMap(LineaSmartConfig c) => new()
     {
         ["numero_linea"] = c.NumeroLinea,
-        ["tipo_activacion_id"] = c.TipoActivacionId?.ToString(),
+        ["estado"] = c.Estado,
+        ["tipo_activacion"] = c.TipoActivacion,
         ["company_campanas_botai"] = c.CompanyCampanasBotai,
         ["bsp_id"] = c.BspId?.ToString(),
+        ["webhook_campanas"] = c.WebhookCampanas,
         ["webhook_cos"] = c.WebhookCos,
         ["webhook_sda"] = c.WebhookSda,
         ["usuario_companyid"] = c.UsuarioCompanyId,
         ["company_bot"] = c.CompanyBot,
         ["bot_id"] = c.BotId,
         ["bot_version"] = c.BotVersion,
-        ["app_channel_id"] = c.AppChannelId?.ToString(),
+        ["app_channel"] = c.AppChannel,
         ["company_id_campanas"] = c.CompanyIdCampanas,
         ["envio_push"] = c.EnvioPush.ToString(),
         ["uso"] = c.Uso,
@@ -217,11 +207,12 @@ public class SmartService : ISmartService
             c.Id,
             c.LineaId,
             c.NumeroLinea,
-            c.TipoActivacionId,
-            c.TipoActivacion?.Nombre,
+            c.Estado,
+            c.TipoActivacion,
             c.CompanyCampanasBotai,
             c.BspId,
             c.Bsp?.Nombre,
+            c.WebhookCampanas,
             c.WebhookCos,
             c.WebhookSda,
             c.UsuarioCompanyId,
@@ -229,8 +220,7 @@ public class SmartService : ISmartService
             c.CompanyBot,
             c.BotId,
             c.BotVersion,
-            c.AppChannelId,
-            c.AppChannel?.Nombre,
+            c.AppChannel,
             c.CompanyIdCampanas,
             c.EnvioPush,
             c.Uso,

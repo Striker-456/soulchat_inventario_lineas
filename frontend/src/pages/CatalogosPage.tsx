@@ -7,14 +7,12 @@ import { useAuth } from '../auth/AuthContext';
 import { useCatalogos } from '../context/CatalogosContext';
 import { useToast } from '../context/ToastContext';
 
-type CatalogId = 'status' | 'tipo_activacion' | 'bsp' | 'tenencia_sim' | 'app_channel';
+type CatalogId = 'status' | 'bsp' | 'tenencia_sim';
 
 const CATALOGOS: { id: CatalogId; label: string; key: CatalogoKey }[] = [
   { id: 'status', label: 'Status', key: 'status-desarrollo' },
-  { id: 'tipo_activacion', label: 'Tipo de activación', key: 'tipo-activacion' },
   { id: 'bsp', label: 'BSP (Business Service Provider)', key: 'bsp' },
   { id: 'tenencia_sim', label: 'Tenencia SIM', key: 'tenencia-sim' },
-  { id: 'app_channel', label: 'App Channel', key: 'app-channel' },
 ];
 
 export default function CatalogosPage() {
@@ -32,10 +30,8 @@ export default function CatalogosPage() {
 
   const itemsById: Record<CatalogId, CatalogoItem[]> = {
     status: c.status,
-    tipo_activacion: c.tiposActivacion,
     bsp: c.bsps,
     tenencia_sim: c.tenencias,
-    app_channel: c.appChannels,
   };
 
   const catalog = CATALOGOS.find(x => x.id === activeCatalog)!;

@@ -9,9 +9,7 @@ erDiagram
     TENENCIA_SIM_CARD ||--o{ LINEA : "clasifica"
     LINEA ||--o| LINEA_CONNECTLY_CONFIG : "0..1"
     LINEA ||--o| LINEA_SMART_CONFIG : "0..1"
-    TIPO_ACTIVACION ||--o{ LINEA_SMART_CONFIG : "clasifica"
     BSP ||--o{ LINEA_SMART_CONFIG : "clasifica"
-    APP_CHANNEL ||--o{ LINEA_SMART_CONFIG : "clasifica"
     USUARIO_SISTEMA ||--o{ AUDITORIA_CAMBIO : "registra"
 
     CLIENTE {
@@ -47,9 +45,11 @@ erDiagram
         int id PK
         int linea_id FK
         string numero_linea
-        int tipo_activacion_id FK
+        string estado "texto libre: ACTIVO, INACTIVO, SIN RESPUESTA..."
+        string tipo_activacion "texto libre"
         int bsp_id FK
-        int app_channel_id FK
+        string webhook_campanas
+        string app_channel "texto libre
         bytea clave_cifrada
         bool envio_push
         bool facturado

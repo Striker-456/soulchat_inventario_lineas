@@ -112,15 +112,17 @@ function connectlyToInput(f: ConnectlyForm, isNew: boolean): ConnectlyInput {
 
 interface SmartForm {
   numeroLinea: string;
-  tipoActivacionId: string;
+  estado: string;
+  tipoActivacion: string;
   bspId: string;
-  appChannelId: string;
+  appChannel: string;
   fechaVerificacion: string;
   companyBot: string;
   botId: string;
   botVersion: string;
   companyCampanasBotai: string;
   companyIdCampanas: string;
+  webhookCampanas: string;
   webhookCos: string;
   webhookSda: string;
   usuarioCompanyId: string;
@@ -132,23 +134,25 @@ interface SmartForm {
 }
 
 const emptySmartForm = (): SmartForm => ({
-  numeroLinea: '', tipoActivacionId: '', bspId: '', appChannelId: '', fechaVerificacion: '',
+  numeroLinea: '', estado: '', tipoActivacion: '', bspId: '', appChannel: '', fechaVerificacion: '',
   companyBot: '', botId: '', botVersion: '', companyCampanasBotai: '', companyIdCampanas: '',
-  webhookCos: '', webhookSda: '', usuarioCompanyId: '', clave: KEEP_CREDENTIAL,
+  webhookCampanas: '', webhookCos: '', webhookSda: '', usuarioCompanyId: '', clave: KEEP_CREDENTIAL,
   envioPush: false, facturado: false, uso: '', observaciones: '',
 });
 
 const smartToForm = (s: Smart): SmartForm => ({
   numeroLinea: s.numeroLinea,
-  tipoActivacionId: idToString(s.tipoActivacionId),
+  estado: s.estado ?? '',
+  tipoActivacion: s.tipoActivacion ?? '',
   bspId: idToString(s.bspId),
-  appChannelId: idToString(s.appChannelId),
+  appChannel: s.appChannel ?? '',
   fechaVerificacion: s.fechaVerificacion ? s.fechaVerificacion.slice(0, 10) : '',
   companyBot: s.companyBot ?? '',
   botId: s.botId ?? '',
   botVersion: s.botVersion ?? '',
   companyCampanasBotai: s.companyCampanasBotai ?? '',
   companyIdCampanas: s.companyIdCampanas ?? '',
+  webhookCampanas: s.webhookCampanas ?? '',
   webhookCos: s.webhookCos ?? '',
   webhookSda: s.webhookSda ?? '',
   usuarioCompanyId: s.usuarioCompanyId ?? '',
@@ -162,15 +166,17 @@ const smartToForm = (s: Smart): SmartForm => ({
 function smartToInput(f: SmartForm, isNew: boolean): SmartInput {
   return {
     numeroLinea: f.numeroLinea.trim(),
-    tipoActivacionId: toIdOrNull(f.tipoActivacionId),
+    estado: emptyToNull(f.estado),
+    tipoActivacion: emptyToNull(f.tipoActivacion),
     bspId: toIdOrNull(f.bspId),
-    appChannelId: toIdOrNull(f.appChannelId),
+    appChannel: emptyToNull(f.appChannel),
     fechaVerificacion: emptyToNull(f.fechaVerificacion),
     companyBot: emptyToNull(f.companyBot),
     botId: emptyToNull(f.botId),
     botVersion: emptyToNull(f.botVersion),
     companyCampanasBotai: emptyToNull(f.companyCampanasBotai),
     companyIdCampanas: emptyToNull(f.companyIdCampanas),
+    webhookCampanas: emptyToNull(f.webhookCampanas),
     webhookCos: emptyToNull(f.webhookCos),
     webhookSda: emptyToNull(f.webhookSda),
     usuarioCompanyId: emptyToNull(f.usuarioCompanyId),
@@ -228,7 +234,7 @@ function LineaDetailForm({ lineaId, initial, options, onBack }: { lineaId: numbe
   const canReveal = can('credenciales', 'ver');
   const canHistory = can('auditoria', 'ver');
   const toast = useToast();
-  const { clientes, empleados, status, tenencias, tiposActivacion, bsps, appChannels } = useCatalogos();
+  const { clientes, empleados, status, tenencias, bsps } = useCatalogos();
 
   const [linea, setLinea] = useState(initial.linea);
   const [general, setGeneral] = useState<GeneralForm>(() => toGeneralForm(initial.linea));
@@ -395,8 +401,6 @@ function LineaDetailForm({ lineaId, initial, options, onBack }: { lineaId: numbe
     if (errors.general[k]) setErrors(e => ({ ...e, general: { ...e.general, [k]: '' } }));
   };
 
-  const catalogosSmartVacios = tiposActivacion.length === 0 || bsps.length === 0 || appChannels.length === 0;
-
   return (
     <div className="space-y-4 pb-20">
       {/* Breadcrumb + Header */}
@@ -409,7 +413,7 @@ function LineaDetailForm({ lineaId, initial, options, onBack }: { lineaId: numbe
               <StatusBadge status={linea.statusDesarrolloNombre} />
             </div>
             <p className="text-sm text-[#64748B] mt-0.5">
-              {linea.clienteNombre ?? 'Sin cliente'}{smart.saved?.appChannelNombre ? ` · ${smart.saved.appChannelNombre}` : ''}
+              {linea.clienteNombre ?? 'Sin cliente'}{smart.saved?.appChannel ? ` · App Channel ${smart.saved.appChannel}` : ''}
             </p>
           </div>
           <div className="flex gap-2">
@@ -480,10 +484,7 @@ function LineaDetailForm({ lineaId, initial, options, onBack }: { lineaId: numbe
                   canReveal={canReveal}
                   onChange={(form) => { setSmart(s => ({ ...s, form })); setErrors(e => ({ ...e, smart: {} })); }}
                   onReveal={revealSmart}
-                  tiposActivacion={catalogOptions(tiposActivacion)}
                   bsps={catalogOptions(bsps)}
-                  appChannels={catalogOptions(appChannels)}
-                  catalogosVacios={catalogosSmartVacios}
                 />
                 {canEdit && smart.saved && (
                   <div className="mt-4 pt-4 border-t border-[#F1F5F9]">
@@ -599,16 +600,13 @@ function ConnectlyTab({ state, errors, canReveal, onChange, onReveal }: {
 // ─── Smart ────────────────────────────────────────────────────────────────────
 type Option = { value: string; label: string };
 
-function SmartTab({ state, errors, canReveal, onChange, onReveal, tiposActivacion, bsps, appChannels, catalogosVacios }: {
+function SmartTab({ state, errors, canReveal, onChange, onReveal, bsps }: {
   state: ModuleState<Smart, SmartForm, { clave: string | null }>;
   errors: FieldErrors;
   canReveal: boolean;
   onChange: (form: SmartForm) => void;
   onReveal: () => Promise<boolean>;
-  tiposActivacion: Option[];
   bsps: Option[];
-  appChannels: Option[];
-  catalogosVacios: boolean;
 }) {
   const { form, saved, revealed } = state;
   const set = <K extends keyof SmartForm>(k: K, v: SmartForm[K]) => onChange({ ...form, [k]: v });
@@ -617,12 +615,13 @@ function SmartTab({ state, errors, canReveal, onChange, onReveal, tiposActivacio
     <div className="space-y-4">
       <CollapsibleSection title="Activación">
         <Input label="Número de línea *" value={form.numeroLinea} onChange={e => set('numeroLinea', e.target.value)} maxLength={20} error={errors.numeroLinea} />
+        <Input label="Estado" value={form.estado} onChange={e => set('estado', e.target.value)} maxLength={100} placeholder="ACTIVO, INACTIVO, SIN RESPUESTA…" />
         <Input label="Fecha de verificación" type="date" value={form.fechaVerificacion} onChange={e => set('fechaVerificacion', e.target.value)} />
-        <Select label="Tipo de activación" value={form.tipoActivacionId} onChange={e => set('tipoActivacionId', e.target.value)} options={tiposActivacion} />
+        <Input label="Tipo de activación" value={form.tipoActivacion} onChange={e => set('tipoActivacion', e.target.value)} maxLength={150} />
         <Select label="BSP" value={form.bspId} onChange={e => set('bspId', e.target.value)} options={bsps} />
-        <Select label="App Channel" value={form.appChannelId} onChange={e => set('appChannelId', e.target.value)} options={appChannels} />
-        {catalogosVacios && (
-          <p className="col-span-2 text-xs text-[#94A3B8]">Algunos catálogos (Tipo de activación, BSP o App Channel) todavía no tienen valores registrados.</p>
+        <Input label="App Channel" value={form.appChannel} onChange={e => set('appChannel', e.target.value)} maxLength={100} />
+        {bsps.length === 0 && (
+          <p className="col-span-2 text-xs text-[#94A3B8]">El catálogo de BSP todavía no tiene valores registrados.</p>
         )}
       </CollapsibleSection>
 
@@ -635,6 +634,7 @@ function SmartTab({ state, errors, canReveal, onChange, onReveal, tiposActivacio
       </CollapsibleSection>
 
       <CollapsibleSection title="Integración">
+        <Input label="Webhook campañas" wrapperClassName="col-span-2" value={form.webhookCampanas} onChange={e => set('webhookCampanas', e.target.value)} maxLength={255} />
         <Input label="Webhook COS" wrapperClassName="col-span-2" value={form.webhookCos} onChange={e => set('webhookCos', e.target.value)} maxLength={255} />
         <Input label="Webhook SDA" wrapperClassName="col-span-2" value={form.webhookSda} onChange={e => set('webhookSda', e.target.value)} maxLength={255} />
         <Input label="Usuario company ID" value={form.usuarioCompanyId} onChange={e => set('usuarioCompanyId', e.target.value)} />

@@ -36,20 +36,14 @@ public class CatalogosController : ControllerBase
     [HttpGet("status-desarrollo")]
     public async Task<IActionResult> GetStatusDesarrollo() => Ok(await _service.GetStatusDesarrolloAsync());
 
-    [HttpGet("tipo-activacion")]
-    public async Task<IActionResult> GetTipoActivacion() => Ok(await _service.GetTipoActivacionAsync());
-
     [HttpGet("bsp")]
     public async Task<IActionResult> GetBsp() => Ok(await _service.GetBspAsync());
 
     [HttpGet("tenencia-sim")]
     public async Task<IActionResult> GetTenenciaSim() => Ok(await _service.GetTenenciaSimAsync());
 
-    [HttpGet("app-channel")]
-    public async Task<IActionResult> GetAppChannel() => Ok(await _service.GetAppChannelAsync());
-
     // ─── Administración de valores ────────────────────────────────────────────
-    // {catalogo}: status-desarrollo | tipo-activacion | bsp | tenencia-sim | app-channel
+    // {catalogo}: status-desarrollo | bsp | tenencia-sim
 
     [HttpPost("{catalogo}")]
     [RequierePermiso(Modulo.Catalogos, Accion.Crear)]

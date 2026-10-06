@@ -38,12 +38,8 @@ public class CatalogAdminRepository<T> : ICatalogAdminRepository<T> where T : cl
             return _context.Lineas.CountAsync(l => l.StatusDesarrolloId == id);
         if (typeof(T) == typeof(TenenciaSimCard))
             return _context.Lineas.CountAsync(l => l.TenenciaSimCardId == id);
-        if (typeof(T) == typeof(TipoActivacion))
-            return _context.LineaSmartConfig.CountAsync(s => s.TipoActivacionId == id);
         if (typeof(T) == typeof(Bsp))
             return _context.LineaSmartConfig.CountAsync(s => s.BspId == id);
-        if (typeof(T) == typeof(AppChannel))
-            return _context.LineaSmartConfig.CountAsync(s => s.AppChannelId == id);
 
         throw new NotSupportedException($"No se sabe contar usos del catálogo {typeof(T).Name}.");
     }

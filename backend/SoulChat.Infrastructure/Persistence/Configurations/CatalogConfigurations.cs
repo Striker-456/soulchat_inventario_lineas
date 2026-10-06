@@ -40,35 +40,11 @@ public class TenenciaSimCardConfiguration : IEntityTypeConfiguration<TenenciaSim
     }
 }
 
-public class TipoActivacionConfiguration : IEntityTypeConfiguration<TipoActivacion>
-{
-    public void Configure(EntityTypeBuilder<TipoActivacion> builder)
-    {
-        builder.ToTable("tipo_activacion");
-        builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).HasColumnName("id");
-        builder.Property(x => x.Nombre).HasColumnName("nombre").HasMaxLength(60).IsRequired();
-        builder.HasIndex(x => x.Nombre).IsUnique();
-    }
-}
-
 public class BspConfiguration : IEntityTypeConfiguration<Bsp>
 {
     public void Configure(EntityTypeBuilder<Bsp> builder)
     {
         builder.ToTable("bsp");
-        builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).HasColumnName("id");
-        builder.Property(x => x.Nombre).HasColumnName("nombre").HasMaxLength(60).IsRequired();
-        builder.HasIndex(x => x.Nombre).IsUnique();
-    }
-}
-
-public class AppChannelConfiguration : IEntityTypeConfiguration<AppChannel>
-{
-    public void Configure(EntityTypeBuilder<AppChannel> builder)
-    {
-        builder.ToTable("app_channel");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.Nombre).HasColumnName("nombre").HasMaxLength(60).IsRequired();

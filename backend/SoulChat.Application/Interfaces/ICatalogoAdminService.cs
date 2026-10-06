@@ -3,8 +3,7 @@ using SoulChat.Application.DTOs.Catalogos;
 namespace SoulChat.Application.Interfaces;
 
 /// <summary>
-/// Alta, cambio y baja de los valores de los catálogos: status-desarrollo, tipo-activacion, bsp,
-/// tenencia-sim y app-channel. Clientes y empleados tienen sus propios servicios.
+/// Alta, cambio y baja de los valores de los catálogos: status-desarrollo, bsp y tenencia-sim. Clientes y empleados tienen sus propios servicios.
 /// </summary>
 public interface ICatalogoAdminService
 {
