@@ -112,10 +112,8 @@ export const api = {
     clientes: () => http.get<CatalogoItem[]>('/catalogos/clientes'),
     empleados: () => http.get<EmpleadoCatalogo[]>('/catalogos/empleados'),
     statusDesarrollo: () => http.get<CatalogoItem[]>('/catalogos/status-desarrollo'),
-    tipoActivacion: () => http.get<CatalogoItem[]>('/catalogos/tipo-activacion'),
     bsp: () => http.get<CatalogoItem[]>('/catalogos/bsp'),
     tenenciaSim: () => http.get<CatalogoItem[]>('/catalogos/tenencia-sim'),
-    appChannel: () => http.get<CatalogoItem[]>('/catalogos/app-channel'),
     // Escrituras: requieren permiso sobre el módulo Catálogos.
     create: (catalogo: CatalogoKey, nombre: string) => http.post<CatalogoItem>(`/catalogos/${catalogo}`, { nombre }),
     update: (catalogo: CatalogoKey, id: number, nombre: string) =>

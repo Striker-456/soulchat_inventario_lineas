@@ -87,111 +87,261 @@ function parseCsv(text: string): { cells: string[]; line: number }[] {
   return rows;
 }
 
-type GeneralKey = Exclude<keyof ImportFila, "connectly" | "smart">;
-
-const ALIASES: Record<GeneralKey, string[]> = {
-  numero: ["numero", "number", "telefono", "linea"],
-  cliente: ["cliente", "client", "empresa"],
-  status: ["status", "estado"],
-  coordinador: ["coordinador", "coordinator"],
-  programador: ["programador", "developer"],
-  tenencia: ["tenencia", "tenencia_sim", "tenencia_sim_card"],
-  descripcionUso: ["descripcion", "descripcion_uso", "descripcionuso", "uso"],
-};
-
-const CONNECTLY_COLS: Record<keyof ImportConnectly, string> = {
-  usuario: "connectly_usuario",
-  contrasena: "connectly_contrasena",
-  businessId: "connectly_business_id",
-  apiKey: "connectly_api_key",
-  webhook: "connectly_webhook",
-  dns: "connectly_dns",
-};
-
-const SMART_COLS: Record<keyof ImportSmart, string> = {
-  tipoActivacion: "smart_tipo_activacion",
-  companyCampanasBotai: "smart_company_campanas_botai",
-  bsp: "smart_bsp",
-  webhookCos: "smart_webhook_cos",
-  webhookSda: "smart_webhook_sda",
-  usuarioCompanyId: "smart_usuario_companyid",
-  clave: "smart_clave",
-  companyBot: "smart_company_bot",
-  botId: "smart_bot_id",
-  botVersion: "smart_bot_version",
-  appChannel: "smart_app_channel",
-  companyIdCampanas: "smart_company_id_campanas",
-  envioPush: "smart_envio_push",
-  uso: "smart_uso",
-  observaciones: "smart_observaciones",
-  fechaVerificacion: "smart_fecha_verificacion",
-  facturado: "smart_facturado",
-};
-
-/** Lee las columnas de un módulo; si todas vienen vacías el módulo se omite. */
-function leerModulo<K extends string>(
-  cols: Record<K, string>,
-  get: (col: string) => string,
-): Record<K, string> | undefined {
-  const values = Object.fromEntries(
-    (Object.keys(cols) as K[]).map((k) => [k, get(cols[k])]),
-  ) as Record<K, string>;
-  return Object.values<string>(values).some((v) => v !== "")
-    ? values
-    : undefined;
+/**
+ * Decodifica el archivo: Excel guarda "CSV UTF-8" o "CSV (delimitado por comas)" en Windows-1252,
+ * así que si no es UTF-8 válido se lee como Windows-1252 (si no, "Contraseña" llega como "Contrase�a").
+ */
+function decodificar(buffer: ArrayBuffer): string {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+  } catch {
+    return new TextDecoder("windows-1252").decode(buffer);
+  }
 }
 
-function toRows(csv: { cells: string[]; line: number }[]): ImportRow[] {
-  const data = csv.filter((r) => !esComentario(r.cells[0] ?? ""));
-  if (data.length < 2) return [];
-  const headers = data[0].cells.map((h) => normalize(h).replace(/\s+/g, "_"));
-  const idxGeneral = Object.fromEntries(
-    (Object.keys(ALIASES) as GeneralKey[]).map((k) => [
-      k,
-      headers.findIndex((h) => ALIASES[k].includes(h)),
-    ]),
-  ) as Record<GeneralKey, number>;
+/** "Status Desarrollo" → "status_desarrollo", "Factura???" → "factura", "Contraseña" → "contrasena". */
+const claveEncabezado = (h: string) =>
+  normalize(h)
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 
-  return data.slice(1).map(({ cells, line }) => {
-    const at = (i: number) => (i >= 0 ? (cells[i] ?? "").trim() : "");
-    const get = (k: GeneralKey) => at(idxGeneral[k]);
-    const getCol = (col: string) => at(headers.indexOf(col));
-    return {
+/** Celda limpia: sin espacios (incluido el no separable de Excel) ni saltos de línea en los extremos. */
+const celda = (v: string | undefined) => (v ?? "").trim();
+
+/** Quita espacios, guiones, puntos y paréntesis: "57316 9006116" → "573169006116". */
+const limpiarNumero = (v: string) => v.replace(/[\s\-.()]/g, "");
+const esNumeroTelefono = (v: string) => /^\+?\d{7,15}$/.test(limpiarNumero(v));
+
+type GeneralKey = Exclude<keyof ImportFila, "connectly" | "smart">;
+
+/**
+ * Encabezados aceptados por campo (ya pasados por `claveEncabezado`). Incluyen los nombres exactos
+ * de las hojas de control «Cuentas Connectly» y «COS-Smart Data & Automation - Control de Líneas».
+ */
+const GENERAL_COLS: Record<GeneralKey, string[]> = {
+  numero: ["numero", "numero_connectly", "numero_linea", "numero_de_linea", "linea", "telefono", "number"],
+  cliente: ["cliente", "client", "empresa"],
+  status: ["status", "status_desarrollo", "estado_desarrollo"],
+  coordinador: ["coordinador", "coordinador_asignado", "coordinator"],
+  programador: ["programador", "developer"],
+  tenencia: ["tenencia", "tenencia_sim", "tenencia_sim_card"],
+  descripcionUso: ["descripcion", "descripcion_uso", "descripcion_de_uso"],
+};
+
+const CONNECTLY_COLS: Record<keyof ImportConnectly, string[]> = {
+  usuario: ["usuario"],
+  contrasena: ["contrasena", "password"],
+  businessId: ["business_id"],
+  apiKey: ["api_key"],
+  webhook: ["webhook"],
+  dns: ["dns"],
+};
+
+const SMART_COLS: Record<keyof ImportSmart, string[]> = {
+  estado: ["estado", "estado_smart"],
+  tipoActivacion: ["tipo_activacion"],
+  companyCampanasBotai: ["company_campanas_botai"],
+  bsp: ["bsp"],
+  webhookCampanas: ["webhook_campanas"],
+  webhookCos: ["webhook_cos"],
+  webhookSda: ["webhook_sda"],
+  usuarioCompanyId: ["usuario_companyid", "usuario_company_id"],
+  clave: ["clave"],
+  companyBot: ["company_bot"],
+  botId: ["bot_id"],
+  botVersion: ["bot_version"],
+  appChannel: ["app_channel"],
+  companyIdCampanas: ["company_id_campanas"],
+  envioPush: ["envio_push", "envio_de_push"],
+  uso: ["uso"],
+  observaciones: ["observaciones"],
+  fechaVerificacion: ["fecha_verificacion", "fecha_de_verificacion"],
+  facturado: ["facturado", "factura"],
+};
+
+/** Acepta el nombre corto y el prefijado por módulo (formato anterior: "connectly_usuario", "smart_bsp"). */
+const conPrefijo = <K extends string>(cols: Record<K, string[]>, prefijo: string) =>
+  Object.fromEntries(
+    Object.entries<string[]>(cols).map(([k, alias]) => [
+      k,
+      [...alias, ...alias.map((a) => `${prefijo}_${a}`)],
+    ]),
+  ) as Record<K, string[]>;
+
+const CONNECTLY_ALIAS = conPrefijo(CONNECTLY_COLS, "connectly");
+const SMART_ALIAS = conPrefijo(SMART_COLS, "smart");
+
+const TODOS_LOS_ALIAS = new Set(
+  [GENERAL_COLS, CONNECTLY_ALIAS, SMART_ALIAS].flatMap((cols) =>
+    Object.values<string[]>(cols).flat(),
+  ),
+);
+
+/** Posición de cada campo en el encabezado (-1 si no está). */
+const indices = <K extends string>(cols: Record<K, string[]>, headers: string[]) =>
+  Object.fromEntries(
+    Object.entries<string[]>(cols).map(([k, alias]) => [
+      k,
+      headers.findIndex((h) => alias.includes(h)),
+    ]),
+  ) as Record<K, number>;
+
+interface Lectura {
+  rows: ImportRow[];
+  /** Encabezados del archivo que no corresponden a ningún campo (se ignoran). */
+  ignoradas: string[];
+  /** Ajustes que se hicieron para poder leer el archivo, para mostrarlos al usuario. */
+  avisos: string[];
+}
+
+function toRows(csv: { cells: string[]; line: number }[]): Lectura {
+  const data = csv.filter((r) => !esComentario(r.cells[0] ?? ""));
+  const avisos: string[] = [];
+
+  // El encabezado es la fila (entre las primeras) con más columnas reconocidas: las hojas de control
+  // a veces traen filas sueltas antes del encabezado.
+  let headerPos = -1;
+  let mejor = 1;
+  data.slice(0, 10).forEach((r, i) => {
+    const reconocidas = r.cells.filter((c) => TODOS_LOS_ALIAS.has(claveEncabezado(c))).length;
+    if (reconocidas > mejor) {
+      mejor = reconocidas;
+      headerPos = i;
+    }
+  });
+  if (headerPos < 0) return { rows: [], ignoradas: [], avisos };
+  if (headerPos > 0)
+    avisos.push(
+      `Se omitieron ${headerPos} fila(s) antes del encabezado (renglón ${data[headerPos].line}).`,
+    );
+
+  const rawHeaders = data[headerPos].cells.map(celda);
+  const headers = rawHeaders.map(claveEncabezado);
+  const body = data.slice(headerPos + 1);
+
+  const general = indices(GENERAL_COLS, headers);
+  const connectly = indices(CONNECTLY_ALIAS, headers);
+  const smart = indices(SMART_ALIAS, headers);
+
+  // Sin columna de número reconocida: se usa la columna cuyo encabezado está vacío o es un teléfono
+  // (alguien escribió sobre el título) y cuyos valores son, en su mayoría, teléfonos.
+  if (general.numero < 0) {
+    general.numero = headers.findIndex((h, i) => {
+      if (h !== "" && !esNumeroTelefono(rawHeaders[i])) return false;
+      const valores = body.map((r) => celda(r.cells[i])).filter(Boolean);
+      return valores.length > 0 && valores.filter(esNumeroTelefono).length / valores.length >= 0.8;
+    });
+    if (general.numero >= 0)
+      avisos.push(
+        `La columna ${general.numero + 1} ("${rawHeaders[general.numero] || "sin título"}") se tomó como número de línea.`,
+      );
+  }
+
+  // Hoja Smart: la columna sin título con datos es el estado operativo (ACTIVO, INACTIVO, SIN RESPUESTA…).
+  const esHojaSmart = Object.values<number>(smart).filter((i) => i >= 0).length >= 3;
+  if (esHojaSmart && smart.estado < 0) {
+    smart.estado = headers.findIndex(
+      (h, i) => h === "" && i !== general.numero && body.some((r) => celda(r.cells[i]) !== ""),
+    );
+    if (smart.estado >= 0)
+      avisos.push(`La columna ${smart.estado + 1} (sin título) se tomó como Estado de Smart.`);
+  }
+
+  const usadas = new Set(
+    [general, connectly, smart].flatMap((m) => Object.values<number>(m)),
+  );
+  const ignoradas = rawHeaders.filter((h, i) => h !== "" && !usadas.has(i));
+
+  const rows: ImportRow[] = [];
+  let titulos = 0;
+  for (const { cells, line } of body) {
+    const at = (i: number) => (i >= 0 ? celda(cells[i]) : "");
+    const numero = limpiarNumero(at(general.numero));
+
+    // Filas de título intermedias ("Lineas y BIM inactiva por META"): un solo texto que no es un teléfono.
+    if (!esNumeroTelefono(numero) && cells.filter((c) => celda(c) !== "").length <= 1) {
+      titulos++;
+      continue;
+    }
+
+    const leer = <K extends string>(idx: Record<K, number>) => {
+      const values = Object.fromEntries(
+        Object.entries<number>(idx).map(([k, i]) => [k, at(i)]),
+      ) as Record<K, string>;
+      // Si todas las columnas del módulo vienen vacías, el módulo se omite.
+      return Object.values<string>(values).some((v) => v !== "") ? values : undefined;
+    };
+
+    rows.push({
       linea: line,
-      numero: get("numero"),
-      cliente: get("cliente"),
-      status: get("status"),
-      coordinador: get("coordinador"),
-      programador: get("programador"),
-      tenencia: get("tenencia"),
-      descripcionUso: get("descripcionUso"),
-      connectly: leerModulo(CONNECTLY_COLS, getCol),
-      smart: leerModulo(SMART_COLS, getCol),
+      numero,
+      cliente: at(general.cliente),
+      status: at(general.status),
+      coordinador: at(general.coordinador),
+      programador: at(general.programador),
+      tenencia: at(general.tenencia),
+      descripcionUso: at(general.descripcionUso),
+      connectly: leer(connectly),
+      smart: leer(smart),
       errores: [],
       nuevos: [],
-    };
-  });
+    });
+  }
+  if (titulos > 0) avisos.push(`Se omitieron ${titulos} fila(s) de título sin número.`);
+
+  return { rows, ignoradas, avisos };
 }
 
 // ─── Plantilla ────────────────────────────────────────────────────────────────
-const TEMPLATE_HEADER = [
-  "numero",
-  "cliente",
-  "status",
-  "coordinador",
-  "programador",
-  "tenencia",
-  "descripcion",
-  ...Object.values(CONNECTLY_COLS),
-  ...Object.values(SMART_COLS),
+// Mismos encabezados que las hojas de control, para poder copiar y pegar columnas desde Excel.
+const PLANTILLA_GENERAL: [GeneralKey, string][] = [
+  ["numero", "Numero"],
+  ["cliente", "Cliente"],
+  ["descripcionUso", "Descripcion Uso"],
+  ["status", "Status Desarrollo"],
+  ["coordinador", "Coordinador Asignado"],
+  ["tenencia", "Tenencia Sim Card"],
+  ["programador", "Programador"],
 ];
+const PLANTILLA_CONNECTLY: [keyof ImportConnectly, string][] = [
+  ["usuario", "Usuario"],
+  ["contrasena", "Contraseña"],
+  ["businessId", "Business ID"],
+  ["apiKey", "API Key"],
+  ["webhook", "Webhook"],
+  ["dns", "DNS"],
+];
+const PLANTILLA_SMART: [keyof ImportSmart, string][] = [
+  ["estado", "Estado"],
+  ["tipoActivacion", "Tipo Activacion"],
+  ["companyCampanasBotai", "Company Campañas BOTAI"],
+  ["bsp", "BSP"],
+  ["webhookCampanas", "Webhook campañas"],
+  ["webhookCos", "Webhook COS"],
+  ["webhookSda", "Webhook SDA"],
+  ["usuarioCompanyId", "Usuario CompanyID"],
+  ["clave", "Clave"],
+  ["companyBot", "Company BOT"],
+  ["botId", "BOT ID"],
+  ["botVersion", "Bot Version"],
+  ["appChannel", "APP Channel"],
+  ["companyIdCampanas", "Company ID Campañas"],
+  ["envioPush", "Envío de Push"],
+  ["uso", "Uso"],
+  ["observaciones", "Observaciones"],
+  ["fechaVerificacion", "Fecha de Verificacion"],
+  ["facturado", "Facturado"],
+];
+const TEMPLATE_HEADER = [...PLANTILLA_GENERAL, ...PLANTILLA_CONNECTLY, ...PLANTILLA_SMART].map(
+  ([, titulo]) => titulo,
+);
 
-/** Arma una fila de la plantilla a partir de las columnas que se quieran llenar. */
+/** Arma una fila de la plantilla (separada por ";", como la exporta Excel en español). */
 const templateRow = (values: Record<string, string>) =>
   TEMPLATE_HEADER.map((h) => {
     const v = values[h] ?? "";
-    return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
-  }).join(",");
+    return /[";\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+  }).join(";");
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 export default function ImportModal({
@@ -204,17 +354,13 @@ export default function ImportModal({
   /** Se llama al cerrar si se importó al menos una línea (para recargar la lista y los catálogos). */
   onDone: (creadas: number, catalogosCreados: number) => void;
 }) {
-  const {
-    clientes,
-    empleados,
-    status,
-    tenencias,
-    tiposActivacion,
-    bsps,
-    appChannels,
-  } = useCatalogos();
+  const { clientes, empleados, status, tenencias, bsps } = useCatalogos();
   const [step, setStep] = useState<"upload" | "preview" | "result">("upload");
   const [rows, setRows] = useState<ImportRow[]>([]);
+  const [lectura, setLectura] = useState<Omit<Lectura, "rows">>({
+    ignoradas: [],
+    avisos: [],
+  });
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [dragging, setDragging] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -231,19 +377,9 @@ export default function ImportModal({
       empleados: set(empleados),
       status: set(status),
       tenencias: set(tenencias),
-      tiposActivacion: set(tiposActivacion),
       bsps: set(bsps),
-      appChannels: set(appChannels),
     };
-  }, [
-    clientes,
-    empleados,
-    status,
-    tenencias,
-    tiposActivacion,
-    bsps,
-    appChannels,
-  ]);
+  }, [clientes, empleados, status, tenencias, bsps]);
 
   const validar = useCallback(
     (parsed: ImportRow[]): ImportRow[] => {
@@ -252,8 +388,8 @@ export default function ImportModal({
         // Solo el número es obligatorio; lo demás es opcional y los catálogos faltantes se crean en el servidor.
         const errores: string[] = [];
         if (!r.numero) errores.push("El número es requerido.");
-        else if (r.numero.length > 20)
-          errores.push("El número no puede superar 20 caracteres.");
+        else if (!esNumeroTelefono(r.numero))
+          errores.push(`"${r.numero}" no es un número de teléfono válido.`);
         else if (vistos.has(r.numero))
           errores.push("El número está repetido en el archivo.");
         else vistos.add(r.numero);
@@ -272,13 +408,7 @@ export default function ImportModal({
         revisar(r.programador, index.empleados, "Empleado");
         revisar(r.status, index.status, "Status");
         revisar(r.tenencia, index.tenencias, "Tenencia");
-        revisar(
-          r.smart?.tipoActivacion,
-          index.tiposActivacion,
-          "Tipo de activación",
-        );
         revisar(r.smart?.bsp, index.bsps, "BSP");
-        revisar(r.smart?.appChannel, index.appChannels, "App channel");
         return { ...r, errores, nuevos };
       });
     },
@@ -288,6 +418,7 @@ export default function ImportModal({
   const reset = () => {
     setStep("upload");
     setRows([]);
+    setLectura({ ignoradas: [], avisos: [] });
     setResultado(null);
     setFileName("");
     setError("");
@@ -316,17 +447,20 @@ export default function ImportModal({
     setFileName(file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
-      const parsed = toRows(parseCsv(String(e.target?.result ?? "")));
+      const buffer = e.target?.result;
+      if (!(buffer instanceof ArrayBuffer)) return;
+      const { rows: parsed, ...info } = toRows(parseCsv(decodificar(buffer)));
       if (parsed.length === 0) {
         setError(
-          "El archivo no contiene registros o no tiene fila de encabezado (numero, cliente, ...).",
+          "El archivo no contiene registros o no se reconoció la fila de encabezado (Numero, Cliente, Usuario, BSP, ...).",
         );
         return;
       }
+      setLectura(info);
       setRows(validar(parsed));
       setStep("preview");
     };
-    reader.readAsText(file, "UTF-8");
+    reader.readAsArrayBuffer(file);
   };
 
   const onDrop = (e: React.DragEvent) => {
@@ -346,35 +480,38 @@ export default function ImportModal({
     const clienteExistente = clientes[0]?.nombre ?? "Cliente existente";
     const csv = [
       "# Plantilla de importación de líneas. Las filas que empiezan con # se ignoran.",
-      '# Solo la columna "numero" es obligatoria (formato E.164 recomendado: +525512345678). Todas las demás son opcionales.',
-      "# Cliente / coordinador / programador / status / tenencia y los catálogos de Smart se crean automáticamente si no existen.",
-      "# Las columnas connectly_* y smart_* solo crean la configuración del módulo si al menos una trae datos.",
-      "# smart_envio_push y smart_facturado: Sí o No. smart_fecha_verificacion: AAAA-MM-DD.",
-      TEMPLATE_HEADER.join(","),
-      templateRow({ numero: "+525512345678" }),
+      "# Usa los mismos encabezados que las hojas «Cuentas Connectly» y «Control de Líneas» de Smart; también puedes subir esas hojas tal cual.",
+      '# Solo "Numero" es obligatorio (también se acepta "Numero Connectly"). Todas las demás columnas son opcionales.',
+      "# Cliente, status, coordinador, programador, tenencia y BSP se crean automáticamente si no existen.",
+      "# Usuario a DNS crean la configuración Connectly y Estado a Facturado la de Smart, solo si la fila trae datos del módulo.",
+      "# Envío de Push y Facturado: Sí o No. Fecha de Verificacion: DD/MM/AAAA o AAAA-MM-DD.",
+      TEMPLATE_HEADER.join(";"),
+      templateRow({ Numero: "573001234567" }),
       templateRow({
-        numero: "+525598765432",
-        cliente: "Cliente Nuevo SA de CV",
-        coordinador: "Nombre del coordinador",
+        Numero: "573009876543",
+        Cliente: "Cliente Nuevo SAS",
+        "Coordinador Asignado": "Nombre del coordinador",
       }),
       templateRow({
-        numero: "+523312345678",
-        cliente: clienteExistente,
-        status: status[0]?.nombre ?? "En desarrollo",
-        descripcion: "Atención al cliente",
-        connectly_usuario: "usuario@empresa.com",
-        connectly_contrasena: "contraseña",
-        connectly_business_id: "123456789",
+        Numero: "573112345678",
+        Cliente: clienteExistente,
+        "Descripcion Uso": "Atención al cliente",
+        "Status Desarrollo": status[0]?.nombre ?? "Producción",
+        Usuario: "usuario@empresa.com",
+        Contraseña: "contraseña",
+        "Business ID": "123456789",
       }),
       templateRow({
-        numero: "+528112345678",
-        cliente: clienteExistente,
-        smart_tipo_activacion: tiposActivacion[0]?.nombre ?? "",
-        smart_bsp: bsps[0]?.nombre ?? "",
-        smart_company_bot: "Company bot",
-        smart_bot_id: "bot-001",
-        smart_envio_push: "No",
-        smart_facturado: "Sí",
+        Numero: "573212345678",
+        Estado: "ACTIVO",
+        "Tipo Activacion": "MIDDLEWARE - Ejemplo",
+        BSP: bsps[0]?.nombre ?? "G",
+        "Company BOT": "276",
+        "BOT ID": "2343",
+        "APP Channel": "237",
+        "Envío de Push": "SI",
+        "Fecha de Verificacion": "2/12/2025",
+        Facturado: "SI",
       }),
     ].join("\r\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
@@ -484,21 +621,13 @@ export default function ImportModal({
           <div className="bg-[#e8f7f9] border border-[#3FB6C4]/30 rounded-lg p-4 text-sm text-[#2fa0ad]">
             <p className="font-semibold mb-1">Formato requerido (CSV)</p>
             <p className="text-xs leading-relaxed">
-              Encabezado en la primera fila. Columnas:{" "}
-              <code className="font-mono bg-white/60 px-1 rounded">
-                numero, cliente, status, coordinador, programador, tenencia,
-                descripcion
-              </code>
-              , más las opcionales{" "}
-              <code className="font-mono bg-white/60 px-1 rounded">
-                connectly_*
-              </code>{" "}
-              y{" "}
-              <code className="font-mono bg-white/60 px-1 rounded">
-                smart_*
-              </code>
-              . Solo <strong>numero</strong> es obligatorio (formato E.164
-              recomendado, p. ej. +525512345678)
+              Puedes subir directamente las hojas{" "}
+              <strong>«Cuentas Connectly»</strong> y{" "}
+              <strong>«Control de Líneas» de Smart</strong> exportadas a CSV
+              desde Excel o Google Sheets (separadas por coma o punto y coma).
+              Se reconocen sus encabezados (Numero Connectly, Status
+              Desarrollo, Business ID, Tipo Activacion, APP Channel, …). Solo
+              el <strong>número</strong> es obligatorio.
             </p>
           </div>
 
@@ -589,6 +718,24 @@ export default function ImportModal({
               Cambiar archivo
             </button>
           </div>
+
+          {(lectura.avisos.length > 0 || lectura.ignoradas.length > 0) && (
+            <div className="text-xs text-[#64748B] bg-[#F8F9FA] border border-[#E2E8F0] rounded-lg px-3 py-2 space-y-1">
+              {lectura.avisos.map((a) => (
+                <p key={a} className="flex items-start gap-2">
+                  <InfoIcon />
+                  {a}
+                </p>
+              ))}
+              {lectura.ignoradas.length > 0 && (
+                <p className="flex items-start gap-2 text-[#B45309]">
+                  <AlertIcon />
+                  Columnas no reconocidas (no se importan):{" "}
+                  {lectura.ignoradas.join(", ")}
+                </p>
+              )}
+            </div>
+          )}
 
           {nuevosTotal > 0 && (
             <div className="flex items-center gap-2 text-xs text-[#3A7BC8] bg-[#EEF4FB] border border-[#3A7BC8]/20 rounded-lg px-3 py-2">

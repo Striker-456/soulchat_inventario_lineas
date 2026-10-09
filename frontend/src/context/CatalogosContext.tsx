@@ -6,20 +6,16 @@ interface CatalogosData {
   clientes: CatalogoItem[];
   empleados: EmpleadoCatalogo[];
   status: CatalogoItem[];
-  tiposActivacion: CatalogoItem[];
   bsps: CatalogoItem[];
   tenencias: CatalogoItem[];
-  appChannels: CatalogoItem[];
 }
 
 const EMPTY: CatalogosData = {
   clientes: [],
   empleados: [],
   status: [],
-  tiposActivacion: [],
   bsps: [],
   tenencias: [],
-  appChannels: [],
 };
 
 interface CatalogosState extends CatalogosData {
@@ -41,16 +37,14 @@ export function CatalogosProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const [clientes, empleados, status, tiposActivacion, bsps, tenencias, appChannels] = await Promise.all([
+      const [clientes, empleados, status, bsps, tenencias] = await Promise.all([
         api.catalogos.clientes(),
         api.catalogos.empleados(),
         api.catalogos.statusDesarrollo(),
-        api.catalogos.tipoActivacion(),
         api.catalogos.bsp(),
         api.catalogos.tenenciaSim(),
-        api.catalogos.appChannel(),
       ]);
-      setData({ clientes, empleados, status, tiposActivacion, bsps, tenencias, appChannels });
+      setData({ clientes, empleados, status, bsps, tenencias });
     } catch (e) {
       setError(errorMessage(e));
     } finally {

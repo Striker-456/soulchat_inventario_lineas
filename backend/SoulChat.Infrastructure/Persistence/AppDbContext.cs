@@ -11,9 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<Empleado> Empleados => Set<Empleado>();
     public DbSet<StatusDesarrollo> StatusDesarrollo => Set<StatusDesarrollo>();
     public DbSet<TenenciaSimCard> TenenciaSimCard => Set<TenenciaSimCard>();
-    public DbSet<TipoActivacion> TipoActivacion => Set<TipoActivacion>();
     public DbSet<Bsp> Bsp => Set<Bsp>();
-    public DbSet<AppChannel> AppChannel => Set<AppChannel>();
     public DbSet<Linea> Lineas => Set<Linea>();
     public DbSet<LineaConnectlyConfig> LineaConnectlyConfig => Set<LineaConnectlyConfig>();
     public DbSet<LineaSmartConfig> LineaSmartConfig => Set<LineaSmartConfig>();

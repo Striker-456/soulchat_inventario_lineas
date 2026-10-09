@@ -9,27 +9,21 @@ namespace SoulChat.Application.Services;
 public class CatalogoAdminService : ICatalogoAdminService
 {
     private readonly ICatalogAdminRepository<StatusDesarrollo> _status;
-    private readonly ICatalogAdminRepository<TipoActivacion> _tiposActivacion;
     private readonly ICatalogAdminRepository<Bsp> _bsps;
     private readonly ICatalogAdminRepository<TenenciaSimCard> _tenencias;
-    private readonly ICatalogAdminRepository<AppChannel> _appChannels;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditoriaService _auditoria;
 
     public CatalogoAdminService(
         ICatalogAdminRepository<StatusDesarrollo> status,
-        ICatalogAdminRepository<TipoActivacion> tiposActivacion,
         ICatalogAdminRepository<Bsp> bsps,
         ICatalogAdminRepository<TenenciaSimCard> tenencias,
-        ICatalogAdminRepository<AppChannel> appChannels,
         IUnitOfWork unitOfWork,
         IAuditoriaService auditoria)
     {
         _status = status;
-        _tiposActivacion = tiposActivacion;
         _bsps = bsps;
         _tenencias = tenencias;
-        _appChannels = appChannels;
         _unitOfWork = unitOfWork;
         _auditoria = auditoria;
     }
@@ -37,30 +31,24 @@ public class CatalogoAdminService : ICatalogoAdminService
     public Task<CatalogoItemDto> CreateAsync(string catalogo, CatalogoInputDto dto) => catalogo switch
     {
         "status-desarrollo" => CrearAsync(_status, "status_desarrollo", dto),
-        "tipo-activacion" => CrearAsync(_tiposActivacion, "tipo_activacion", dto),
         "bsp" => CrearAsync(_bsps, "bsp", dto),
         "tenencia-sim" => CrearAsync(_tenencias, "tenencia_sim_card", dto),
-        "app-channel" => CrearAsync(_appChannels, "app_channel", dto),
         _ => throw NoEncontrado(catalogo),
     };
 
     public Task<CatalogoItemDto> UpdateAsync(string catalogo, int id, CatalogoInputDto dto) => catalogo switch
     {
         "status-desarrollo" => ActualizarAsync(_status, "status_desarrollo", id, dto),
-        "tipo-activacion" => ActualizarAsync(_tiposActivacion, "tipo_activacion", id, dto),
         "bsp" => ActualizarAsync(_bsps, "bsp", id, dto),
         "tenencia-sim" => ActualizarAsync(_tenencias, "tenencia_sim_card", id, dto),
-        "app-channel" => ActualizarAsync(_appChannels, "app_channel", id, dto),
         _ => throw NoEncontrado(catalogo),
     };
 
     public Task DeleteAsync(string catalogo, int id) => catalogo switch
     {
         "status-desarrollo" => EliminarAsync(_status, "status_desarrollo", "status", id),
-        "tipo-activacion" => EliminarAsync(_tiposActivacion, "tipo_activacion", "tipo de activación", id),
         "bsp" => EliminarAsync(_bsps, "bsp", "BSP", id),
         "tenencia-sim" => EliminarAsync(_tenencias, "tenencia_sim_card", "tenencia de SIM", id),
-        "app-channel" => EliminarAsync(_appChannels, "app_channel", "app channel", id),
         _ => throw NoEncontrado(catalogo),
     };
 

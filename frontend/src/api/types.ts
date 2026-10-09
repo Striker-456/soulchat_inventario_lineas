@@ -74,7 +74,7 @@ export interface EmpleadoCatalogo {
 }
 
 /** Catálogos cuyos valores se pueden dar de alta, cambiar y eliminar. */
-export type CatalogoKey = 'status-desarrollo' | 'tipo-activacion' | 'bsp' | 'tenencia-sim' | 'app-channel';
+export type CatalogoKey = 'status-desarrollo' | 'bsp' | 'tenencia-sim';
 
 // ─── Clientes ─────────────────────────────────────────────────────────────────
 export type EstadoCliente = 'Activo' | 'Pausado';
@@ -155,11 +155,14 @@ export interface ImportConnectly {
   dns: string;
 }
 
-/** Columnas smart_* del CSV. */
+/** Columnas del módulo Smart en el CSV. */
 export interface ImportSmart {
+  /** Estado operativo (ACTIVO, INACTIVO, SIN RESPUESTA…), texto libre. */
+  estado: string;
   tipoActivacion: string;
   companyCampanasBotai: string;
   bsp: string;
+  webhookCampanas: string;
   webhookCos: string;
   webhookSda: string;
   usuarioCompanyId: string;
@@ -234,9 +237,11 @@ export interface ConnectlyReveal {
 // ─── Smart ────────────────────────────────────────────────────────────────────
 export interface SmartInput {
   numeroLinea: string;
-  tipoActivacionId: number | null;
+  estado: string | null;
+  tipoActivacion: string | null;
   companyCampanasBotai: string | null;
   bspId: number | null;
+  webhookCampanas: string | null;
   webhookCos: string | null;
   webhookSda: string | null;
   usuarioCompanyId: string | null;
@@ -244,7 +249,7 @@ export interface SmartInput {
   companyBot: string | null;
   botId: string | null;
   botVersion: string | null;
-  appChannelId: number | null;
+  appChannel: string | null;
   companyIdCampanas: string | null;
   envioPush: boolean;
   uso: string | null;
@@ -257,11 +262,12 @@ export interface Smart {
   id: number;
   lineaId: number;
   numeroLinea: string;
-  tipoActivacionId: number | null;
-  tipoActivacionNombre: string | null;
+  estado: string | null;
+  tipoActivacion: string | null;
   companyCampanasBotai: string | null;
   bspId: number | null;
   bspNombre: string | null;
+  webhookCampanas: string | null;
   webhookCos: string | null;
   webhookSda: string | null;
   usuarioCompanyId: string | null;
@@ -269,8 +275,7 @@ export interface Smart {
   companyBot: string | null;
   botId: string | null;
   botVersion: string | null;
-  appChannelId: number | null;
-  appChannelNombre: string | null;
+  appChannel: string | null;
   companyIdCampanas: string | null;
   envioPush: boolean;
   uso: string | null;

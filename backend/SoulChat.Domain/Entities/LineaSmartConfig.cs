@@ -9,14 +9,18 @@ public class LineaSmartConfig : AuditableEntity
 
     public string NumeroLinea { get; set; } = string.Empty;
 
-    public int? TipoActivacionId { get; set; }
-    public TipoActivacion? TipoActivacion { get; set; }
+    /// <summary>Estado operativo de la línea en Smart (ACTIVO, INACTIVO, SIN RESPUESTA, Bloqueo Meta…). Texto libre.</summary>
+    public string? Estado { get; set; }
+
+    /// <summary>Texto libre: en la hoja de control es un nombre por línea ("MIDDLEWARE - COSMarsh1"), no un catálogo.</summary>
+    public string? TipoActivacion { get; set; }
 
     public string? CompanyCampanasBotai { get; set; }
 
     public int? BspId { get; set; }
     public Bsp? Bsp { get; set; }
 
+    public string? WebhookCampanas { get; set; }
     public string? WebhookCos { get; set; }
     public string? WebhookSda { get; set; }
     public string? UsuarioCompanyId { get; set; }
@@ -25,8 +29,8 @@ public class LineaSmartConfig : AuditableEntity
     public string? BotId { get; set; }
     public string? BotVersion { get; set; }
 
-    public int? AppChannelId { get; set; }
-    public AppChannel? AppChannel { get; set; }
+    /// <summary>Texto libre: en la hoja de control es el ID numérico del canal (237, 294…).</summary>
+    public string? AppChannel { get; set; }
 
     public string? CompanyIdCampanas { get; set; }
     public bool EnvioPush { get; set; }

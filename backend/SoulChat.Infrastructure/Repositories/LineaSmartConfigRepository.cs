@@ -11,9 +11,7 @@ public class LineaSmartConfigRepository : GenericRepository<LineaSmartConfig>, I
 
     public async Task<LineaSmartConfig?> GetByLineaIdAsync(int lineaId) =>
         await DbSet
-            .Include(c => c.TipoActivacion)
             .Include(c => c.Bsp)
-            .Include(c => c.AppChannel)
             .FirstOrDefaultAsync(c => c.LineaId == lineaId);
 
     public async Task<bool> ExisteNumeroAsync(string numero) =>

@@ -34,9 +34,7 @@ export function useAuditValue() {
       coordinador_id: c.empleados,
       programador_id: c.empleados,
       tenencia_sim_card_id: c.tenencias,
-      tipo_activacion_id: c.tiposActivacion,
       bsp_id: c.bsps,
-      app_channel_id: c.appChannels,
     };
 
     const items = catalogo[campo];
